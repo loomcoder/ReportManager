@@ -14,6 +14,7 @@ const logger = require('./logger');
 const { getProjectContext } = require('./project_context');
 const connectionManager = require('./connection_manager');
 const cubeSchemaManager = require('./cube_schema_manager');
+const schedulerManager = require('./scheduler');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -2042,7 +2043,85 @@ app.post('/chat/conversations/:id/messages', authenticateToken, async (req, res)
     }
 });
 
-initializeAndSeed().then(() => {
+// ==================== SCHEDULES ROUTES ====================
+
+app.get('/schedules', authenticateToken, async (req, res) => {
+    try {
+        const schedules = await knex('schedules').select('*');
+        res.json(schedules);
+    } catch (err) {
+        logger.error("Get schedules error:", err);
+        res.sendStatus(500);
+    }
+});
+
+app.post('/schedules', authenticateToken, async (req, res) => {
+    try {
+        const { name, cronExpression, taskType, targetId, isActive } = req.body;
+        const [id] = await knex('schedules').insert({
+            name,
+            cronExpression,
+            taskType,
+            targetId,
+            isActive: isActive !== undefined ? isActive : 1
+        }).returning('id');
+
+        const scheduleId = typeof id === 'object' ? id.id : id;
+        const newSchedule = await knex('schedules').where({ id: scheduleId }).first();
+
+        // Notify scheduler of the change
+        await schedulerManager.notifyChange();
+
+        res.status(201).json(newSchedule);
+    } catch (err) {
+        logger.error("Create schedule error:", err);
+        res.sendStatus(500);
+    }
+});
+
+app.put('/schedules/:id', authenticateToken, async (req, res) => {
+    try {
+        const { name, cronExpression, taskType, targetId, isActive } = req.body;
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (cronExpression !== undefined) updateData.cronExpression = cronExpression;
+        if (taskType !== undefined) updateData.taskType = taskType;
+        if (targetId !== undefined) updateData.targetId = targetId;
+        if (isActive !== undefined) updateData.isActive = isActive;
+
+        await knex('schedules').where({ id: req.params.id }).update(updateData);
+
+        const updated = await knex('schedules').where({ id: req.params.id }).first();
+        if (!updated) return res.sendStatus(404);
+
+        // Notify scheduler of the change
+        await schedulerManager.notifyChange();
+
+        res.json(updated);
+    } catch (err) {
+        logger.error("Update schedule error:", err);
+        res.sendStatus(500);
+    }
+});
+
+app.delete('/schedules/:id', authenticateToken, async (req, res) => {
+    try {
+        const deleted = await knex('schedules').where({ id: req.params.id }).del();
+        if (deleted) {
+            // Notify scheduler of the change
+            await schedulerManager.notifyChange();
+        }
+        res.sendStatus(204);
+    } catch (err) {
+        logger.error("Delete schedule error:", err);
+        res.sendStatus(500);
+    }
+});
+
+initializeAndSeed().then(async () => {
+    // Initialize Scheduler
+    await schedulerManager.init();
+
     app.listen(PORT, () => {
         logger.info(`Server running on port ${PORT}`);
     });
