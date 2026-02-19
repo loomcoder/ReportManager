@@ -8,6 +8,7 @@
     "docker:test": "docker compose run --rm backend npm run test"
   },
   "dependencies": {
-    "axios": "^1.13.5"
+    "axios": "^1.13.5",
+    "dotenv": "^17.3.1"
   }
 }
