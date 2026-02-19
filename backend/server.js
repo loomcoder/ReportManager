@@ -13,6 +13,7 @@ const { initializeAndSeed } = require('./database'); // Import DB init function
 const logger = require('./logger');
 const { getProjectContext } = require('./project_context');
 const connectionManager = require('./connection_manager');
+const cubeSchemaManager = require('./cube_schema_manager');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -713,6 +714,32 @@ app.post('/data-sources', authenticateToken, upload.single('file'), async (req, 
         const dsId = typeof id === 'object' ? id.id : id;
 
         const newDataSource = await knex('data_sources').where({ id: dsId }).first();
+
+        // Trigger Cube.js schema generation
+        const dsForSchema = { ...newDataSource };
+        try {
+            if ((type === 'excel' || type === 'csv') && req.file) {
+                const filePath = req.file.path;
+                const workbook = xlsx.readFile(filePath);
+                const sheetName = req.body.sheetName || workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+                if (jsonData.length > 0) {
+                    const columns = jsonData[0];
+                    dsForSchema.columns = columns.map(col => ({ name: col, type: 'string' }));
+                }
+            } else if (['postgres', 'mysql'].includes(type)) {
+                // For DB, we could fetch columns here, but for now we'll pass name if available
+                const dsConfig = JSON.parse(config);
+                if (dsConfig.tableName) {
+                    dsForSchema.columns = [{ name: 'id', type: 'number' }]; // Minimal
+                }
+            }
+            await cubeSchemaManager.generateCubeSchema(dsForSchema);
+        } catch (schemaErr) {
+            logger.error('Failed to generate Cube schema on creation:', schemaErr);
+        }
+
         res.status(201).json({
             ...newDataSource,
             config: newDataSource.config ? JSON.parse(newDataSource.config) : null,
@@ -778,6 +805,17 @@ app.put('/data-sources/:id', authenticateToken, upload.single('file'), async (re
         });
 
         const updated = await knex('data_sources').where({ id: req.params.id }).first();
+
+        // Trigger Cube.js schema update
+        try {
+            await cubeSchemaManager.generateCubeSchema({
+                ...updated,
+                columns: [] // Columns could be refined here if needed
+            });
+        } catch (schemaErr) {
+            logger.error('Failed to update Cube schema:', schemaErr);
+        }
+
         res.json({
             ...updated,
             config: updated.config ? JSON.parse(updated.config) : null,
@@ -801,6 +839,14 @@ app.delete('/data-sources/:id', authenticateToken, async (req, res) => {
         }
 
         await knex('data_sources').where({ id: req.params.id }).del();
+        
+        // Remove Cube.js schema
+        try {
+            cubeSchemaManager.deleteCubeSchema(dataSource.name);
+        } catch (schemaErr) {
+            logger.error('Failed to delete Cube schema:', schemaErr);
+        }
+
         res.sendStatus(204);
     } catch (err) {
         logger.error("Delete data source error:", err);
