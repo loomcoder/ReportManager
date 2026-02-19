@@ -31,7 +31,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+    limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit for large file support
     fileFilter: function (req, file, cb) {
         const allowedTypes = ['.xlsx', '.xls', '.csv'];
         const ext = path.extname(file.originalname).toLowerCase();
@@ -71,6 +71,40 @@ const authenticateToken = (req, res, next) => {
 };
 
 // ==================== HELPERS ====================
+
+function inferType(value) {
+    if (value === null || value === undefined || value === '') return 'string';
+    if (typeof value === 'number') return 'number';
+    if (typeof value === 'boolean') return 'boolean';
+    if (!isNaN(Date.parse(value)) && isNaN(value)) return 'date';
+    if (!isNaN(value) && !isNaN(parseFloat(value))) return 'number';
+    return 'string';
+}
+
+function detectSchema(columns, sampleRows) {
+    return columns.map((col, idx) => {
+        const types = sampleRows
+            .map(row => inferType(row[col] || row[idx]))
+            .filter(t => t !== 'string' || (sampleRows[0] && (sampleRows[0][col] || sampleRows[0][idx]) !== ''));
+        
+        // Majority vote for type
+        const typeCounts = types.reduce((acc, t) => {
+            acc[t] = (acc[t] || 0) + 1;
+            return acc;
+        }, {});
+        
+        let detectedType = 'string';
+        let maxCount = 0;
+        for (const [type, count] of Object.entries(typeCounts)) {
+            if (count > maxCount) {
+                maxCount = count;
+                detectedType = type;
+            }
+        }
+        
+        return { name: col, type: detectedType };
+    });
+}
 
 async function executeReportData(dataSource, reportConfig) {
     let columns = [];
@@ -813,6 +847,8 @@ app.post('/data-sources/preview', authenticateToken, upload.single('file'), asyn
                 const worksheet = workbook.Sheets[sheetName];
                 const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
 
+                let schema = [];
+
                 if (jsonData.length > 0) {
                     const hasHeader = req.body.hasHeader === 'true' || req.body.hasHeader === true;
 
@@ -826,6 +862,7 @@ app.post('/data-sources/preview', authenticateToken, upload.single('file'), asyn
                             });
                             return rowObj;
                         });
+                        schema = detectSchema(columns, rows);
                     } else {
                         // Generate column names if no header
                         const firstRow = jsonData[0];
@@ -838,6 +875,7 @@ app.post('/data-sources/preview', authenticateToken, upload.single('file'), asyn
                             });
                             return rowObj;
                         });
+                        schema = detectSchema(columns, rows);
                     }
                 }
 
@@ -848,7 +886,7 @@ app.post('/data-sources/preview', authenticateToken, upload.single('file'), asyn
 
                 res.json({
                     status: 'success',
-                    data: { columns, rows }
+                    data: { columns, rows, schema }
                 });
             } catch (fileErr) {
                 logger.error('File processing error:', fileErr);
@@ -971,6 +1009,13 @@ app.post('/data-sources/columns', authenticateToken, async (req, res) => {
 
             if (jsonData.length > 0) {
                 columns = jsonData[0]; // First row as headers
+                const sampleRows = jsonData.slice(1, 11).map(row => {
+                    const rowObj = {};
+                    columns.forEach((col, idx) => rowObj[col] = row[idx]);
+                    return rowObj;
+                });
+                const schema = detectSchema(columns, sampleRows);
+                return res.json({ columns, schema });
             }
         } else if (['postgres', 'mysql'].includes(dataSource.type)) {
             try {

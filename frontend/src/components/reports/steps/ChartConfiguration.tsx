@@ -27,6 +27,7 @@ export const ChartConfiguration: React.FC<ChartConfigurationProps> = ({ sourceId
 
     // Data & Columns
     const [columns, setColumns] = useState<string[]>([]);
+    const [schema, setSchema] = useState<any[]>([]);
     const [previewRows, setPreviewRows] = useState<any[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(false);
 
@@ -57,25 +58,50 @@ export const ChartConfiguration: React.FC<ChartConfigurationProps> = ({ sourceId
         if (!sourceId) return;
         setIsLoadingData(true);
         try {
-            // Fetch Columns
+            // Fetch Columns & Schema
             const colResponse = await api.post("/data-sources/columns", {
                 sourceId,
                 config: { query, sheetName }
             });
-            setColumns(colResponse.data.columns || []);
+            const fetchedColumns = colResponse.data.columns || [];
+            const fetchedSchema = colResponse.data.schema || [];
+            setColumns(fetchedColumns);
+            setSchema(fetchedSchema);
 
-            // Fetch Preview Data (Reuse preview endpoint or just use the columns endpoint if it returns rows? 
-            // Usually columns endpoint just returns columns. We intentionally want to see data.
-            // Let's use the preview endpoint from NewReportWizard here too for consistency.
+            // Fetch Preview Data
             const dataResponse = await api.post("/reports/preview", {
                 sourceId,
                 config: {
-                    type: 'datatable', // Force datatable for raw view
+                    type: 'datatable',
                     query,
                     sheetName
                 }
             });
-            setPreviewRows(dataResponse.data.data.rows || []);
+            const rows = dataResponse.data.data.rows || [];
+            setPreviewRows(rows);
+
+            // Auto-fill axis based on schema if not already set
+            if (fetchedSchema.length > 0) {
+                // Find first date or string for X-axis
+                if (!xAxis) {
+                    const xCand = fetchedSchema.find((s: any) => s.type === 'date') || fetchedSchema.find((s: any) => s.type === 'string');
+                    if (xCand) setXAxis(xCand.name);
+                }
+                
+                // Find first number for Y-axis
+                if (!yAxis) {
+                    const yCand = fetchedSchema.find((s: any) => s.type === 'number');
+                    if (yCand) {
+                        setYAxis(yCand.name);
+                        handleAggregateChange(yCand.name, 'SUM');
+                    }
+                }
+
+                // For table/pivot, select all columns by default if none selected
+                if (selectedColumns.length === 0 && (chartType === 'datatable' || chartType === 'pivot')) {
+                    setSelectedColumns(fetchedColumns);
+                }
+            }
 
         } catch (err) {
             console.error("Failed to fetch data:", err);
