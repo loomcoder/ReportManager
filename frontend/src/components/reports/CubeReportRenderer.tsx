@@ -1,14 +1,16 @@
 "use client";
 
 import { useCubeQuery } from "@cubejs-client/react";
-import cubejsApi from "@/lib/cube";
 import { Loader2 } from "lucide-react";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface CubeReportRendererProps {
     query: any; // Cube.js query object
-    chartType: 'bar' | 'line' | 'table';
+    chartType: 'bar' | 'line' | 'pie' | 'table';
 }
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export default function CubeReportRenderer({ query, chartType }: CubeReportRendererProps) {
     const { resultSet, isLoading, error } = useCubeQuery(query);
@@ -28,26 +30,30 @@ export default function CubeReportRenderer({ query, chartType }: CubeReportRende
     const data = resultSet.chartPivot();
 
     if (chartType === 'table') {
+        const columns = resultSet.tableColumns();
         return (
-            <div className="overflow-auto max-h-[400px]">
-                <table className="w-full border-collapse border border-slate-200">
-                    <thead>
-                        <tr>
-                            {Object.keys(data[0] || {}).map(key => (
-                                <th key={key} className="border border-slate-200 p-2 text-left">{key}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.map((row: any, i: number) => (
-                            <tr key={i}>
-                                {Object.values(row).map((val: any, j: number) => (
-                                    <td key={j} className="border border-slate-200 p-2">{val ? val.toString() : ''}</td>
+            <div className="mt-8 border rounded-lg overflow-hidden">
+                <div className="bg-muted p-2 text-sm font-medium">Data Table</div>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                {columns.map(col => (
+                                    <TableHead key={col.key}>{col.title}</TableHead>
                                 ))}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {data.map((row: any, i: number) => (
+                                <TableRow key={i}>
+                                    {columns.map(col => (
+                                        <TableCell key={col.key}>{row[col.key] !== undefined ? row[col.key].toString() : ''}</TableCell>
+                                    ))}
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             </div>
         );
     }
@@ -69,11 +75,11 @@ export default function CubeReportRenderer({ query, chartType }: CubeReportRende
                                 key={s.key}
                                 dataKey={s.key}
                                 name={s.title}
-                                fill={`hsl(${index * 60}, 70%, 50%)`}
+                                fill={COLORS[index % COLORS.length]}
                             />
                         ))}
                     </BarChart>
-                ) : (
+                ) : chartType === 'line' ? (
                     <LineChart data={data}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="x" />
@@ -86,10 +92,32 @@ export default function CubeReportRenderer({ query, chartType }: CubeReportRende
                                 type="monotone"
                                 dataKey={s.key}
                                 name={s.title}
-                                stroke={`hsl(${index * 60}, 70%, 50%)`}
+                                stroke={COLORS[index % COLORS.length]}
                             />
                         ))}
                     </LineChart>
+                ) : chartType === 'pie' ? (
+                    <PieChart>
+                        <Pie
+                            data={data}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                            outerRadius={150}
+                            fill="#8884d8"
+                            dataKey={series[0]?.key}
+                            nameKey="x"
+                        >
+                            {data.map((entry: any, index: number) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                    </PieChart>
+                ) : (
+                    <div>Unsupported chart type</div>
                 )}
             </ResponsiveContainer>
         </div>

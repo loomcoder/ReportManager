@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import api from "@/lib/api";
 import { Report } from "@/types";
+import CubeReportRenderer from "@/components/reports/CubeReportRenderer";
+import { CubeProvider } from "@cubejs-client/react";
+import cubejsApi from "@/lib/cube";
 
 interface ReportWidgetProps {
     reportId: string;
@@ -13,7 +14,6 @@ interface ReportWidgetProps {
 
 export function ReportWidget({ reportId, type }: ReportWidgetProps) {
     const [report, setReport] = useState<Report | null>(null);
-    const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -21,11 +21,6 @@ export function ReportWidget({ reportId, type }: ReportWidgetProps) {
             try {
                 const response = await api.get(`/reports/${reportId}`);
                 setReport(response.data);
-
-                // Simulate data fetching based on report content
-                // In a real app, this would call /api/reports/:id/execute
-                const mockData = generateMockData(response.data.name);
-                setData(mockData);
             } catch (error) {
                 console.error("Failed to fetch report:", error);
             } finally {
@@ -36,38 +31,6 @@ export function ReportWidget({ reportId, type }: ReportWidgetProps) {
         fetchReport();
     }, [reportId]);
 
-    const generateMockData = (name: string) => {
-        // Generate different data based on report name keywords
-        if (name.toLowerCase().includes("sales")) {
-            return [
-                { name: "Jan", value: 4000 },
-                { name: "Feb", value: 3000 },
-                { name: "Mar", value: 2000 },
-                { name: "Apr", value: 2780 },
-                { name: "May", value: 1890 },
-                { name: "Jun", value: 2390 },
-            ];
-        } else if (name.toLowerCase().includes("user")) {
-            return [
-                { name: "Mon", value: 120 },
-                { name: "Tue", value: 132 },
-                { name: "Wed", value: 101 },
-                { name: "Thu", value: 134 },
-                { name: "Fri", value: 90 },
-                { name: "Sat", value: 230 },
-                { name: "Sun", value: 210 },
-            ];
-        } else {
-            return [
-                { name: "A", value: 10 },
-                { name: "B", value: 20 },
-                { name: "C", value: 30 },
-                { name: "D", value: 40 },
-                { name: "E", value: 50 },
-            ];
-        }
-    };
-
     if (loading) {
         return <div className="flex h-full items-center justify-center">Loading...</div>;
     }
@@ -76,38 +39,30 @@ export function ReportWidget({ reportId, type }: ReportWidgetProps) {
         return <div className="flex h-full items-center justify-center text-red-500">Failed to load report</div>;
     }
 
+    // Map report config to Cube query
+    let cubeQuery = (report.config as any).query;
+    
+    // Fallback/Legacy mapping
+    if (!cubeQuery || typeof cubeQuery === 'string') {
+        const sourceName = `Source${report.sourceId}`;
+        const measure = (report.config as any).yAxis ? `${sourceName}.${(report.config as any).yAxis}` : null;
+        const dimension = (report.config as any).xAxis ? `${sourceName}.${(report.config as any).xAxis}` : null;
+        
+        cubeQuery = {
+            measures: measure ? [measure] : [],
+            dimensions: dimension ? [dimension] : [],
+            timeDimensions: []
+        };
+    }
+
     return (
-        <div className="h-full w-full">
-            {type === "chart" ? (
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="value" fill="#8884d8" />
-                    </BarChart>
-                </ResponsiveContainer>
-            ) : (
-                <div className="overflow-auto h-full">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b">
-                                <th className="text-left p-2">Name</th>
-                                <th className="text-right p-2">Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {data.map((row, i) => (
-                                <tr key={i} className="border-b last:border-0">
-                                    <td className="p-2">{row.name}</td>
-                                    <td className="text-right p-2">{row.value}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-        </div>
+        <CubeProvider cubejsApi={cubejsApi}>
+            <div className="h-full w-full">
+                <CubeReportRenderer 
+                    query={cubeQuery} 
+                    chartType={type === 'table' ? 'table' : (report.config as any).type} 
+                />
+            </div>
+        </CubeProvider>
     );
 }
