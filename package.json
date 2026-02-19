@@ -1,5 +1,13 @@
 {
+  "name": "report-manager",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node smoke-test.js",
+    "docker:start": "docker compose up -d",
+    "docker:stop": "docker compose down",
+    "docker:test": "docker compose run --rm backend npm run test"
+  },
   "dependencies": {
-    "axios": "^1.13.2"
+    "axios": "^1.13.5"
   }
 }

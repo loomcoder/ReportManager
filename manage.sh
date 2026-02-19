@@ -27,8 +27,20 @@ show_help() {
     echo -e "  ${GREEN}build${NC}    : Rebuild backend Docker images"
     echo -e "  ${GREEN}logs${NC}     : View logs from backend Docker services"
     echo -e "  ${GREEN}clean${NC}    : Stop services and remove volumes (clean slate)"
+    echo -e "  ${GREEN}test${NC}     : Run system smoke tests"
     echo -e "  ${GREEN}help${NC}     : Show this help message"
     echo ""
+}
+
+# Function to run tests
+cmd_test() {
+    echo -e "${CYAN}Running system smoke tests...${NC}"
+    if command -v node >/dev/null 2>&1; then
+        node smoke-test.js
+    else
+        echo -e "${YELLOW}node not found on host. Running tests via backend container...${NC}"
+        docker compose exec backend node smoke-test.js
+    fi
 }
 
 # Function to start services
@@ -81,6 +93,9 @@ cmd_start() {
 
     if command -v npm >/dev/null 2>&1; then
         if [ -d "frontend" ]; then
+            # Run tests in background after a short delay
+            (sleep 10 && cmd_test) &
+
             cd frontend || exit
             
             # Install dependencies if missing
@@ -171,6 +186,9 @@ case "$1" in
         ;;
     clean)
         cmd_clean
+        ;;
+    test)
+        cmd_test
         ;;
     help|--help|-h)
         show_help
