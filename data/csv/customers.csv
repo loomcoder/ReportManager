@@ -1,0 +1,21 @@
+CustomerID,CustomerName,Email,Phone,City,Country,Industry,Status,CreatedDate
+2001,Aisha Chopra,cust2001@email.com,919429120127,Pune,India,Retail,Active,2025-02-09
+2002,Aisha Malhotra,cust2002@email.com,916199942662,Mumbai,India,Finance,Active,2025-02-01
+2003,Arjun Nair,cust2003@email.com,919504203520,Hyderabad,India,Manufacturing,Active,2025-07-12
+2004,Deepika Kumar,cust2004@email.com,919269357722,Hyderabad,India,Finance,Inactive,2025-11-23
+2005,Priya Nair,cust2005@email.com,919502898657,Hyderabad,India,Retail,Active,2025-05-23
+2006,Vikram Sharma,cust2006@email.com,919857312057,Bangalore,India,Healthcare,Active,2025-02-19
+2007,Sana Gupta,cust2007@email.com,917161254418,Pune,India,IT,Active,2025-03-20
+2008,Nikhil Verma,cust2008@email.com,918539438008,Mumbai,India,Finance,Active,2025-03-03
+2009,Priya Kumar,cust2009@email.com,917925668379,Pune,India,Retail,Active,2025-11-01
+2010,Vikram Gupta,cust2010@email.com,918495266426,Bangalore,India,Manufacturing,Active,2025-05-13
+2011,Rajesh Sharma,cust2011@email.com,918018905312,Mumbai,India,Healthcare,Active,2025-02-22
+2012,Neha Nair,cust2012@email.com,917783252153,Chennai,India,Retail,Active,2025-12-04
+2013,Arjun Rao,cust2013@email.com,916458137243,Delhi,India,Manufacturing,Inactive,2025-10-07
+2014,Zara Kumar,cust2014@email.com,919411598911,Pune,India,Manufacturing,Active,2025-07-08
+2015,Amit Kumar,cust2015@email.com,917158412375,Chennai,India,Finance,Active,2025-10-31
+2016,Arjun Malhotra,cust2016@email.com,917588426036,Pune,India,Finance,Active,2025-08-02
+2017,Sana Khan,cust2017@email.com,919080058668,Mumbai,India,Finance,Active,2025-08-28
+2018,Priya Sharma,cust2018@email.com,917064961886,Pune,India,Retail,Active,2025-09-10
+2019,Vikram Verma,cust2019@email.com,917007940237,Hyderabad,India,Retail,Inactive,2025-06-25
+2020,Arjun Chopra,cust2020@email.com,917761455670,Delhi,India,Manufacturing,Inactive,2025-07-26

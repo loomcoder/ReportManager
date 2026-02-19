@@ -1,0 +1,61 @@
+TransactionID,Date,DebitAccountID,DebitAccountName,CreditAccountID,CreditAccountName,Amount,Description,Reference
+1,2026-01-02,1002,Accounts Receivable,1007,Sales Revenue,18974.45,Transaction 1,REF-20260102-1
+2,2026-01-11,1007,Sales Revenue,1004,Accounts Payable,23817.89,Transaction 2,REF-20260111-2
+3,2026-01-15,1005,Salary Payable,1010,Rent Expense,40820.65,Transaction 3,REF-20260115-3
+4,2026-01-05,1007,Sales Revenue,1006,Capital,2287.05,Transaction 4,REF-20260105-4
+5,2026-01-06,1007,Sales Revenue,1006,Capital,38563.78,Transaction 5,REF-20260106-5
+6,2026-01-18,1005,Salary Payable,1008,COGS,7943.8,Transaction 6,REF-20260118-6
+7,2026-01-23,1005,Salary Payable,1007,Sales Revenue,30336.84,Transaction 7,REF-20260123-7
+8,2026-01-27,1005,Salary Payable,1007,Sales Revenue,19474.33,Transaction 8,REF-20260127-8
+9,2026-01-15,1010,Rent Expense,1003,Equipment,3219.56,Transaction 9,REF-20260115-9
+10,2026-01-03,1002,Accounts Receivable,1009,Salaries Expense,48524.68,Transaction 10,REF-20260103-10
+11,2026-01-23,1003,Equipment,1004,Accounts Payable,35555.82,Transaction 11,REF-20260123-11
+12,2026-01-14,1004,Accounts Payable,1009,Salaries Expense,29169.56,Transaction 12,REF-20260114-12
+13,2026-01-26,1004,Accounts Payable,1008,COGS,12690.24,Transaction 13,REF-20260126-13
+14,2026-01-08,1006,Capital,1005,Salary Payable,12828.79,Transaction 14,REF-20260108-14
+15,2026-01-15,1010,Rent Expense,1002,Accounts Receivable,31558.37,Transaction 15,REF-20260115-15
+16,2026-01-23,1002,Accounts Receivable,1009,Salaries Expense,4829.73,Transaction 16,REF-20260123-16
+17,2026-01-02,1007,Sales Revenue,1002,Accounts Receivable,35712.9,Transaction 17,REF-20260102-17
+18,2026-01-10,1006,Capital,1009,Salaries Expense,3724.82,Transaction 18,REF-20260110-18
+19,2026-01-06,1005,Salary Payable,1003,Equipment,3944.25,Transaction 19,REF-20260106-19
+20,2026-01-18,1006,Capital,1001,Cash,36617.6,Transaction 20,REF-20260118-20
+21,2026-01-24,1007,Sales Revenue,1001,Cash,4007.26,Transaction 21,REF-20260124-21
+22,2026-01-25,1002,Accounts Receivable,1006,Capital,33290.68,Transaction 22,REF-20260125-22
+23,2026-01-26,1005,Salary Payable,1002,Accounts Receivable,44424.8,Transaction 23,REF-20260126-23
+24,2026-01-26,1002,Accounts Receivable,1004,Accounts Payable,34906.55,Transaction 24,REF-20260126-24
+25,2026-01-18,1006,Capital,1003,Equipment,5447.48,Transaction 25,REF-20260118-25
+26,2026-01-08,1009,Salaries Expense,1006,Capital,38525.95,Transaction 26,REF-20260108-26
+27,2026-01-09,1007,Sales Revenue,1010,Rent Expense,38219.26,Transaction 27,REF-20260109-27
+28,2026-01-27,1001,Cash,1002,Accounts Receivable,15090.24,Transaction 28,REF-20260127-28
+29,2026-01-16,1005,Salary Payable,1003,Equipment,18577.38,Transaction 29,REF-20260116-29
+30,2026-01-09,1003,Equipment,1007,Sales Revenue,6410.46,Transaction 30,REF-20260109-30
+31,2026-01-16,1008,COGS,1005,Salary Payable,20951.24,Transaction 31,REF-20260116-31
+32,2026-01-23,1001,Cash,1003,Equipment,35018.53,Transaction 32,REF-20260123-32
+33,2026-01-06,1009,Salaries Expense,1002,Accounts Receivable,34526.83,Transaction 33,REF-20260106-33
+34,2026-01-08,1003,Equipment,1007,Sales Revenue,2008.78,Transaction 34,REF-20260108-34
+35,2026-01-11,1010,Rent Expense,1006,Capital,4673.98,Transaction 35,REF-20260111-35
+36,2026-01-22,1008,COGS,1005,Salary Payable,28934.42,Transaction 36,REF-20260122-36
+37,2026-01-04,1007,Sales Revenue,1010,Rent Expense,6348.0,Transaction 37,REF-20260104-37
+38,2026-01-19,1007,Sales Revenue,1008,COGS,46168.75,Transaction 38,REF-20260119-38
+39,2026-01-11,1002,Accounts Receivable,1007,Sales Revenue,29755.42,Transaction 39,REF-20260111-39
+40,2026-01-27,1003,Equipment,1008,COGS,48436.07,Transaction 40,REF-20260127-40
+41,2026-01-19,1006,Capital,1009,Salaries Expense,3429.12,Transaction 41,REF-20260119-41
+42,2026-01-07,1005,Salary Payable,1006,Capital,35422.27,Transaction 42,REF-20260107-42
+43,2026-01-14,1001,Cash,1007,Sales Revenue,49841.92,Transaction 43,REF-20260114-43
+44,2026-01-06,1005,Salary Payable,1002,Accounts Receivable,1742.18,Transaction 44,REF-20260106-44
+45,2026-01-14,1010,Rent Expense,1002,Accounts Receivable,8264.57,Transaction 45,REF-20260114-45
+46,2026-01-17,1008,COGS,1003,Equipment,12209.62,Transaction 46,REF-20260117-46
+47,2026-01-18,1004,Accounts Payable,1003,Equipment,15555.37,Transaction 47,REF-20260118-47
+48,2026-01-08,1003,Equipment,1001,Cash,25788.76,Transaction 48,REF-20260108-48
+49,2026-01-24,1008,COGS,1007,Sales Revenue,43203.47,Transaction 49,REF-20260124-49
+50,2026-01-13,1010,Rent Expense,1007,Sales Revenue,27896.92,Transaction 50,REF-20260113-50
+51,2026-01-21,1004,Accounts Payable,1008,COGS,40967.16,Transaction 51,REF-20260121-51
+52,2026-01-03,1003,Equipment,1008,COGS,26418.35,Transaction 52,REF-20260103-52
+53,2026-01-21,1009,Salaries Expense,1006,Capital,23495.65,Transaction 53,REF-20260121-53
+54,2026-01-27,1006,Capital,1002,Accounts Receivable,36102.28,Transaction 54,REF-20260127-54
+55,2026-01-06,1010,Rent Expense,1009,Salaries Expense,15005.52,Transaction 55,REF-20260106-55
+56,2026-01-12,1009,Salaries Expense,1003,Equipment,1740.8,Transaction 56,REF-20260112-56
+57,2026-01-23,1009,Salaries Expense,1002,Accounts Receivable,33852.09,Transaction 57,REF-20260123-57
+58,2026-01-21,1007,Sales Revenue,1001,Cash,1120.96,Transaction 58,REF-20260121-58
+59,2026-01-12,1009,Salaries Expense,1003,Equipment,49069.1,Transaction 59,REF-20260112-59
+60,2026-01-01,1010,Rent Expense,1004,Accounts Payable,29449.94,Transaction 60,REF-20260101-60

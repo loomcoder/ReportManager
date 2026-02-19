@@ -1,0 +1,26 @@
+EmpID,FirstName,LastName,Email,Phone,DeptID,JobID,HireDate,Salary,EmploymentStatus,Gender,Age
+1001,Nikhil,Kumar,emp1001@company.com,917599355172,5,8,2020-11-05,40604,On Leave,M,56
+1002,Amit,Chopra,emp1002@company.com,916299389488,4,7,2020-12-11,61115,Inactive,M,38
+1003,Aisha,Rao,emp1003@company.com,917256117995,3,5,2023-09-05,67844,Active,F,48
+1004,Zara,Rao,emp1004@company.com,919636972318,3,6,2023-07-26,90839,Active,M,53
+1005,Sana,Patel,emp1005@company.com,919450280380,4,7,2023-04-06,48161,Active,F,56
+1006,Neha,Desai,emp1006@company.com,916270933654,1,1,2020-12-21,108380,Inactive,M,48
+1007,Rohan,Patel,emp1007@company.com,918931573723,5,8,2023-11-03,53417,On Leave,F,25
+1008,Sana,Kumar,emp1008@company.com,919655944799,2,4,2022-12-25,105158,Active,M,50
+1009,Priya,Sharma,emp1009@company.com,918848983959,2,3,2020-11-23,52263,Active,M,43
+1010,Deepika,Malhotra,emp1010@company.com,916888250770,4,7,2022-01-09,59664,Inactive,M,56
+1011,Sana,Nair,emp1011@company.com,917533602672,5,8,2020-02-17,46152,Active,F,29
+1012,Amit,Kumar,emp1012@company.com,919147860312,1,2,2021-05-28,51160,On Leave,M,57
+1013,Nikhil,Singh,emp1013@company.com,917823663488,5,8,2022-07-28,56750,On Leave,F,58
+1014,Vikram,Singh,emp1014@company.com,919086644865,5,8,2021-08-24,37248,Inactive,M,46
+1015,Zara,Malhotra,emp1015@company.com,917415756593,3,6,2021-12-25,91423,Active,M,56
+1016,Priya,Patel,emp1016@company.com,916626121812,5,8,2023-07-29,38295,Inactive,F,41
+1017,Arjun,Desai,emp1017@company.com,917460084626,2,3,2020-04-29,50497,Active,F,49
+1018,Zara,Sharma,emp1018@company.com,917656073898,4,7,2022-11-25,61649,Active,M,54
+1019,Neha,Patel,emp1019@company.com,917489299578,3,6,2023-11-27,98933,Active,F,40
+1020,Aisha,Patel,emp1020@company.com,918146016972,2,4,2022-10-21,93302,Active,F,48
+1021,Sana,Malhotra,emp1021@company.com,918678829358,5,8,2023-05-19,43138,Inactive,F,60
+1022,Rajesh,Nair,emp1022@company.com,917173813353,4,7,2021-12-04,58161,Inactive,F,35
+1023,Vikram,Khan,emp1023@company.com,917179645488,4,7,2020-08-13,52198,Inactive,M,43
+1024,Zara,Verma,emp1024@company.com,917758731753,3,6,2023-09-25,96912,Active,F,47
+1025,Arjun,Singh,emp1025@company.com,917298094193,1,2,2023-04-23,85359,Active,F,52

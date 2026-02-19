@@ -1,0 +1,998 @@
+{
+  "accounts": [
+    {
+      "AccountID": 1001,
+      "AccountCode": "1000",
+      "AccountName": "Cash",
+      "AccountType": "Asset"
+    },
+    {
+      "AccountID": 1002,
+      "AccountCode": "1200",
+      "AccountName": "Accounts Receivable",
+      "AccountType": "Asset"
+    },
+    {
+      "AccountID": 1003,
+      "AccountCode": "1500",
+      "AccountName": "Equipment",
+      "AccountType": "Asset"
+    },
+    {
+      "AccountID": 1004,
+      "AccountCode": "2000",
+      "AccountName": "Accounts Payable",
+      "AccountType": "Liability"
+    },
+    {
+      "AccountID": 1005,
+      "AccountCode": "2100",
+      "AccountName": "Salary Payable",
+      "AccountType": "Liability"
+    },
+    {
+      "AccountID": 1006,
+      "AccountCode": "3000",
+      "AccountName": "Capital",
+      "AccountType": "Equity"
+    },
+    {
+      "AccountID": 1007,
+      "AccountCode": "4000",
+      "AccountName": "Sales Revenue",
+      "AccountType": "Revenue"
+    },
+    {
+      "AccountID": 1008,
+      "AccountCode": "5000",
+      "AccountName": "COGS",
+      "AccountType": "Expense"
+    },
+    {
+      "AccountID": 1009,
+      "AccountCode": "5100",
+      "AccountName": "Salaries Expense",
+      "AccountType": "Expense"
+    },
+    {
+      "AccountID": 1010,
+      "AccountCode": "5200",
+      "AccountName": "Rent Expense",
+      "AccountType": "Expense"
+    }
+  ],
+  "transactions": [
+    {
+      "TransactionID": 1,
+      "Date": "2026-01-02",
+      "DebitAccountID": 1002,
+      "DebitAccountName": "Accounts Receivable",
+      "CreditAccountID": 1007,
+      "CreditAccountName": "Sales Revenue",
+      "Amount": 18974.45,
+      "Description": "Transaction 1",
+      "Reference": "REF-20260102-1"
+    },
+    {
+      "TransactionID": 2,
+      "Date": "2026-01-11",
+      "DebitAccountID": 1007,
+      "DebitAccountName": "Sales Revenue",
+      "CreditAccountID": 1004,
+      "CreditAccountName": "Accounts Payable",
+      "Amount": 23817.89,
+      "Description": "Transaction 2",
+      "Reference": "REF-20260111-2"
+    },
+    {
+      "TransactionID": 3,
+      "Date": "2026-01-15",
+      "DebitAccountID": 1005,
+      "DebitAccountName": "Salary Payable",
+      "CreditAccountID": 1010,
+      "CreditAccountName": "Rent Expense",
+      "Amount": 40820.65,
+      "Description": "Transaction 3",
+      "Reference": "REF-20260115-3"
+    },
+    {
+      "TransactionID": 4,
+      "Date": "2026-01-05",
+      "DebitAccountID": 1007,
+      "DebitAccountName": "Sales Revenue",
+      "CreditAccountID": 1006,
+      "CreditAccountName": "Capital",
+      "Amount": 2287.05,
+      "Description": "Transaction 4",
+      "Reference": "REF-20260105-4"
+    },
+    {
+      "TransactionID": 5,
+      "Date": "2026-01-06",
+      "DebitAccountID": 1007,
+      "DebitAccountName": "Sales Revenue",
+      "CreditAccountID": 1006,
+      "CreditAccountName": "Capital",
+      "Amount": 38563.78,
+      "Description": "Transaction 5",
+      "Reference": "REF-20260106-5"
+    },
+    {
+      "TransactionID": 6,
+      "Date": "2026-01-18",
+      "DebitAccountID": 1005,
+      "DebitAccountName": "Salary Payable",
+      "CreditAccountID": 1008,
+      "CreditAccountName": "COGS",
+      "Amount": 7943.8,
+      "Description": "Transaction 6",
+      "Reference": "REF-20260118-6"
+    },
+    {
+      "TransactionID": 7,
+      "Date": "2026-01-23",
+      "DebitAccountID": 1005,
+      "DebitAccountName": "Salary Payable",
+      "CreditAccountID": 1007,
+      "CreditAccountName": "Sales Revenue",
+      "Amount": 30336.84,
+      "Description": "Transaction 7",
+      "Reference": "REF-20260123-7"
+    },
+    {
+      "TransactionID": 8,
+      "Date": "2026-01-27",
+      "DebitAccountID": 1005,
+      "DebitAccountName": "Salary Payable",
+      "CreditAccountID": 1007,
+      "CreditAccountName": "Sales Revenue",
+      "Amount": 19474.33,
+      "Description": "Transaction 8",
+      "Reference": "REF-20260127-8"
+    },
+    {
+      "TransactionID": 9,
+      "Date": "2026-01-15",
+      "DebitAccountID": 1010,
+      "DebitAccountName": "Rent Expense",
+      "CreditAccountID": 1003,
+      "CreditAccountName": "Equipment",
+      "Amount": 3219.56,
+      "Description": "Transaction 9",
+      "Reference": "REF-20260115-9"
+    },
+    {
+      "TransactionID": 10,
+      "Date": "2026-01-03",
+      "DebitAccountID": 1002,
+      "DebitAccountName": "Accounts Receivable",
+      "CreditAccountID": 1009,
+      "CreditAccountName": "Salaries Expense",
+      "Amount": 48524.68,
+      "Description": "Transaction 10",
+      "Reference": "REF-20260103-10"
+    },
+    {
+      "TransactionID": 11,
+      "Date": "2026-01-23",
+      "DebitAccountID": 1003,
+      "DebitAccountName": "Equipment",
+      "CreditAccountID": 1004,
+      "CreditAccountName": "Accounts Payable",
+      "Amount": 35555.82,
+      "Description": "Transaction 11",
+      "Reference": "REF-20260123-11"
+    },
+    {
+      "TransactionID": 12,
+      "Date": "2026-01-14",
+      "DebitAccountID": 1004,
+      "DebitAccountName": "Accounts Payable",
+      "CreditAccountID": 1009,
+      "CreditAccountName": "Salaries Expense",
+      "Amount": 29169.56,
+      "Description": "Transaction 12",
+      "Reference": "REF-20260114-12"
+    },
+    {
+      "TransactionID": 13,
+      "Date": "2026-01-26",
+      "DebitAccountID": 1004,
+      "DebitAccountName": "Accounts Payable",
+      "CreditAccountID": 1008,
+      "CreditAccountName": "COGS",
+      "Amount": 12690.24,
+      "Description": "Transaction 13",
+      "Reference": "REF-20260126-13"
+    },
+    {
+      "TransactionID": 14,
+      "Date": "2026-01-08",
+      "DebitAccountID": 1006,
+      "DebitAccountName": "Capital",
+      "CreditAccountID": 1005,
+      "CreditAccountName": "Salary Payable",
+      "Amount": 12828.79,
+      "Description": "Transaction 14",
+      "Reference": "REF-20260108-14"
+    },
+    {
+      "TransactionID": 15,
+      "Date": "2026-01-15",
+      "DebitAccountID": 1010,
+      "DebitAccountName": "Rent Expense",
+      "CreditAccountID": 1002,
+      "CreditAccountName": "Accounts Receivable",
+      "Amount": 31558.37,
+      "Description": "Transaction 15",
+      "Reference": "REF-20260115-15"
+    },
+    {
+      "TransactionID": 16,
+      "Date": "2026-01-23",
+      "DebitAccountID": 1002,
+      "DebitAccountName": "Accounts Receivable",
+      "CreditAccountID": 1009,
+      "CreditAccountName": "Salaries Expense",
+      "Amount": 4829.73,
+      "Description": "Transaction 16",
+      "Reference": "REF-20260123-16"
+    },
+    {
+      "TransactionID": 17,
+      "Date": "2026-01-02",
+      "DebitAccountID": 1007,
+      "DebitAccountName": "Sales Revenue",
+      "CreditAccountID": 1002,
+      "CreditAccountName": "Accounts Receivable",
+      "Amount": 35712.9,
+      "Description": "Transaction 17",
+      "Reference": "REF-20260102-17"
+    },
+    {
+      "TransactionID": 18,
+      "Date": "2026-01-10",
+      "DebitAccountID": 1006,
+      "DebitAccountName": "Capital",
+      "CreditAccountID": 1009,
+      "CreditAccountName": "Salaries Expense",
+      "Amount": 3724.82,
+      "Description": "Transaction 18",
+      "Reference": "REF-20260110-18"
+    },
+    {
+      "TransactionID": 19,
+      "Date": "2026-01-06",
+      "DebitAccountID": 1005,
+      "DebitAccountName": "Salary Payable",
+      "CreditAccountID": 1003,
+      "CreditAccountName": "Equipment",
+      "Amount": 3944.25,
+      "Description": "Transaction 19",
+      "Reference": "REF-20260106-19"
+    },
+    {
+      "TransactionID": 20,
+      "Date": "2026-01-18",
+      "DebitAccountID": 1006,
+      "DebitAccountName": "Capital",
+      "CreditAccountID": 1001,
+      "CreditAccountName": "Cash",
+      "Amount": 36617.6,
+      "Description": "Transaction 20",
+      "Reference": "REF-20260118-20"
+    },
+    {
+      "TransactionID": 21,
+      "Date": "2026-01-24",
+      "DebitAccountID": 1007,
+      "DebitAccountName": "Sales Revenue",
+      "CreditAccountID": 1001,
+      "CreditAccountName": "Cash",
+      "Amount": 4007.26,
+      "Description": "Transaction 21",
+      "Reference": "REF-20260124-21"
+    },
+    {
+      "TransactionID": 22,
+      "Date": "2026-01-25",
+      "DebitAccountID": 1002,
+      "DebitAccountName": "Accounts Receivable",
+      "CreditAccountID": 1006,
+      "CreditAccountName": "Capital",
+      "Amount": 33290.68,
+      "Description": "Transaction 22",
+      "Reference": "REF-20260125-22"
+    },
+    {
+      "TransactionID": 23,
+      "Date": "2026-01-26",
+      "DebitAccountID": 1005,
+      "DebitAccountName": "Salary Payable",
+      "CreditAccountID": 1002,
+      "CreditAccountName": "Accounts Receivable",
+      "Amount": 44424.8,
+      "Description": "Transaction 23",
+      "Reference": "REF-20260126-23"
+    },
+    {
+      "TransactionID": 24,
+      "Date": "2026-01-26",
+      "DebitAccountID": 1002,
+      "DebitAccountName": "Accounts Receivable",
+      "CreditAccountID": 1004,
+      "CreditAccountName": "Accounts Payable",
+      "Amount": 34906.55,
+      "Description": "Transaction 24",
+      "Reference": "REF-20260126-24"
+    },
+    {
+      "TransactionID": 25,
+      "Date": "2026-01-18",
+      "DebitAccountID": 1006,
+      "DebitAccountName": "Capital",
+      "CreditAccountID": 1003,
+      "CreditAccountName": "Equipment",
+      "Amount": 5447.48,
+      "Description": "Transaction 25",
+      "Reference": "REF-20260118-25"
+    },
+    {
+      "TransactionID": 26,
+      "Date": "2026-01-08",
+      "DebitAccountID": 1009,
+      "DebitAccountName": "Salaries Expense",
+      "CreditAccountID": 1006,
+      "CreditAccountName": "Capital",
+      "Amount": 38525.95,
+      "Description": "Transaction 26",
+      "Reference": "REF-20260108-26"
+    },
+    {
+      "TransactionID": 27,
+      "Date": "2026-01-09",
+      "DebitAccountID": 1007,
+      "DebitAccountName": "Sales Revenue",
+      "CreditAccountID": 1010,
+      "CreditAccountName": "Rent Expense",
+      "Amount": 38219.26,
+      "Description": "Transaction 27",
+      "Reference": "REF-20260109-27"
+    },
+    {
+      "TransactionID": 28,
+      "Date": "2026-01-27",
+      "DebitAccountID": 1001,
+      "DebitAccountName": "Cash",
+      "CreditAccountID": 1002,
+      "CreditAccountName": "Accounts Receivable",
+      "Amount": 15090.24,
+      "Description": "Transaction 28",
+      "Reference": "REF-20260127-28"
+    },
+    {
+      "TransactionID": 29,
+      "Date": "2026-01-16",
+      "DebitAccountID": 1005,
+      "DebitAccountName": "Salary Payable",
+      "CreditAccountID": 1003,
+      "CreditAccountName": "Equipment",
+      "Amount": 18577.38,
+      "Description": "Transaction 29",
+      "Reference": "REF-20260116-29"
+    },
+    {
+      "TransactionID": 30,
+      "Date": "2026-01-09",
+      "DebitAccountID": 1003,
+      "DebitAccountName": "Equipment",
+      "CreditAccountID": 1007,
+      "CreditAccountName": "Sales Revenue",
+      "Amount": 6410.46,
+      "Description": "Transaction 30",
+      "Reference": "REF-20260109-30"
+    },
+    {
+      "TransactionID": 31,
+      "Date": "2026-01-16",
+      "DebitAccountID": 1008,
+      "DebitAccountName": "COGS",
+      "CreditAccountID": 1005,
+      "CreditAccountName": "Salary Payable",
+      "Amount": 20951.24,
+      "Description": "Transaction 31",
+      "Reference": "REF-20260116-31"
+    },
+    {
+      "TransactionID": 32,
+      "Date": "2026-01-23",
+      "DebitAccountID": 1001,
+      "DebitAccountName": "Cash",
+      "CreditAccountID": 1003,
+      "CreditAccountName": "Equipment",
+      "Amount": 35018.53,
+      "Description": "Transaction 32",
+      "Reference": "REF-20260123-32"
+    },
+    {
+      "TransactionID": 33,
+      "Date": "2026-01-06",
+      "DebitAccountID": 1009,
+      "DebitAccountName": "Salaries Expense",
+      "CreditAccountID": 1002,
+      "CreditAccountName": "Accounts Receivable",
+      "Amount": 34526.83,
+      "Description": "Transaction 33",
+      "Reference": "REF-20260106-33"
+    },
+    {
+      "TransactionID": 34,
+      "Date": "2026-01-08",
+      "DebitAccountID": 1003,
+      "DebitAccountName": "Equipment",
+      "CreditAccountID": 1007,
+      "CreditAccountName": "Sales Revenue",
+      "Amount": 2008.78,
+      "Description": "Transaction 34",
+      "Reference": "REF-20260108-34"
+    },
+    {
+      "TransactionID": 35,
+      "Date": "2026-01-11",
+      "DebitAccountID": 1010,
+      "DebitAccountName": "Rent Expense",
+      "CreditAccountID": 1006,
+      "CreditAccountName": "Capital",
+      "Amount": 4673.98,
+      "Description": "Transaction 35",
+      "Reference": "REF-20260111-35"
+    },
+    {
+      "TransactionID": 36,
+      "Date": "2026-01-22",
+      "DebitAccountID": 1008,
+      "DebitAccountName": "COGS",
+      "CreditAccountID": 1005,
+      "CreditAccountName": "Salary Payable",
+      "Amount": 28934.42,
+      "Description": "Transaction 36",
+      "Reference": "REF-20260122-36"
+    },
+    {
+      "TransactionID": 37,
+      "Date": "2026-01-04",
+      "DebitAccountID": 1007,
+      "DebitAccountName": "Sales Revenue",
+      "CreditAccountID": 1010,
+      "CreditAccountName": "Rent Expense",
+      "Amount": 6348.0,
+      "Description": "Transaction 37",
+      "Reference": "REF-20260104-37"
+    },
+    {
+      "TransactionID": 38,
+      "Date": "2026-01-19",
+      "DebitAccountID": 1007,
+      "DebitAccountName": "Sales Revenue",
+      "CreditAccountID": 1008,
+      "CreditAccountName": "COGS",
+      "Amount": 46168.75,
+      "Description": "Transaction 38",
+      "Reference": "REF-20260119-38"
+    },
+    {
+      "TransactionID": 39,
+      "Date": "2026-01-11",
+      "DebitAccountID": 1002,
+      "DebitAccountName": "Accounts Receivable",
+      "CreditAccountID": 1007,
+      "CreditAccountName": "Sales Revenue",
+      "Amount": 29755.42,
+      "Description": "Transaction 39",
+      "Reference": "REF-20260111-39"
+    },
+    {
+      "TransactionID": 40,
+      "Date": "2026-01-27",
+      "DebitAccountID": 1003,
+      "DebitAccountName": "Equipment",
+      "CreditAccountID": 1008,
+      "CreditAccountName": "COGS",
+      "Amount": 48436.07,
+      "Description": "Transaction 40",
+      "Reference": "REF-20260127-40"
+    },
+    {
+      "TransactionID": 41,
+      "Date": "2026-01-19",
+      "DebitAccountID": 1006,
+      "DebitAccountName": "Capital",
+      "CreditAccountID": 1009,
+      "CreditAccountName": "Salaries Expense",
+      "Amount": 3429.12,
+      "Description": "Transaction 41",
+      "Reference": "REF-20260119-41"
+    },
+    {
+      "TransactionID": 42,
+      "Date": "2026-01-07",
+      "DebitAccountID": 1005,
+      "DebitAccountName": "Salary Payable",
+      "CreditAccountID": 1006,
+      "CreditAccountName": "Capital",
+      "Amount": 35422.27,
+      "Description": "Transaction 42",
+      "Reference": "REF-20260107-42"
+    },
+    {
+      "TransactionID": 43,
+      "Date": "2026-01-14",
+      "DebitAccountID": 1001,
+      "DebitAccountName": "Cash",
+      "CreditAccountID": 1007,
+      "CreditAccountName": "Sales Revenue",
+      "Amount": 49841.92,
+      "Description": "Transaction 43",
+      "Reference": "REF-20260114-43"
+    },
+    {
+      "TransactionID": 44,
+      "Date": "2026-01-06",
+      "DebitAccountID": 1005,
+      "DebitAccountName": "Salary Payable",
+      "CreditAccountID": 1002,
+      "CreditAccountName": "Accounts Receivable",
+      "Amount": 1742.18,
+      "Description": "Transaction 44",
+      "Reference": "REF-20260106-44"
+    },
+    {
+      "TransactionID": 45,
+      "Date": "2026-01-14",
+      "DebitAccountID": 1010,
+      "DebitAccountName": "Rent Expense",
+      "CreditAccountID": 1002,
+      "CreditAccountName": "Accounts Receivable",
+      "Amount": 8264.57,
+      "Description": "Transaction 45",
+      "Reference": "REF-20260114-45"
+    },
+    {
+      "TransactionID": 46,
+      "Date": "2026-01-17",
+      "DebitAccountID": 1008,
+      "DebitAccountName": "COGS",
+      "CreditAccountID": 1003,
+      "CreditAccountName": "Equipment",
+      "Amount": 12209.62,
+      "Description": "Transaction 46",
+      "Reference": "REF-20260117-46"
+    },
+    {
+      "TransactionID": 47,
+      "Date": "2026-01-18",
+      "DebitAccountID": 1004,
+      "DebitAccountName": "Accounts Payable",
+      "CreditAccountID": 1003,
+      "CreditAccountName": "Equipment",
+      "Amount": 15555.37,
+      "Description": "Transaction 47",
+      "Reference": "REF-20260118-47"
+    },
+    {
+      "TransactionID": 48,
+      "Date": "2026-01-08",
+      "DebitAccountID": 1003,
+      "DebitAccountName": "Equipment",
+      "CreditAccountID": 1001,
+      "CreditAccountName": "Cash",
+      "Amount": 25788.76,
+      "Description": "Transaction 48",
+      "Reference": "REF-20260108-48"
+    },
+    {
+      "TransactionID": 49,
+      "Date": "2026-01-24",
+      "DebitAccountID": 1008,
+      "DebitAccountName": "COGS",
+      "CreditAccountID": 1007,
+      "CreditAccountName": "Sales Revenue",
+      "Amount": 43203.47,
+      "Description": "Transaction 49",
+      "Reference": "REF-20260124-49"
+    },
+    {
+      "TransactionID": 50,
+      "Date": "2026-01-13",
+      "DebitAccountID": 1010,
+      "DebitAccountName": "Rent Expense",
+      "CreditAccountID": 1007,
+      "CreditAccountName": "Sales Revenue",
+      "Amount": 27896.92,
+      "Description": "Transaction 50",
+      "Reference": "REF-20260113-50"
+    },
+    {
+      "TransactionID": 51,
+      "Date": "2026-01-21",
+      "DebitAccountID": 1004,
+      "DebitAccountName": "Accounts Payable",
+      "CreditAccountID": 1008,
+      "CreditAccountName": "COGS",
+      "Amount": 40967.16,
+      "Description": "Transaction 51",
+      "Reference": "REF-20260121-51"
+    },
+    {
+      "TransactionID": 52,
+      "Date": "2026-01-03",
+      "DebitAccountID": 1003,
+      "DebitAccountName": "Equipment",
+      "CreditAccountID": 1008,
+      "CreditAccountName": "COGS",
+      "Amount": 26418.35,
+      "Description": "Transaction 52",
+      "Reference": "REF-20260103-52"
+    },
+    {
+      "TransactionID": 53,
+      "Date": "2026-01-21",
+      "DebitAccountID": 1009,
+      "DebitAccountName": "Salaries Expense",
+      "CreditAccountID": 1006,
+      "CreditAccountName": "Capital",
+      "Amount": 23495.65,
+      "Description": "Transaction 53",
+      "Reference": "REF-20260121-53"
+    },
+    {
+      "TransactionID": 54,
+      "Date": "2026-01-27",
+      "DebitAccountID": 1006,
+      "DebitAccountName": "Capital",
+      "CreditAccountID": 1002,
+      "CreditAccountName": "Accounts Receivable",
+      "Amount": 36102.28,
+      "Description": "Transaction 54",
+      "Reference": "REF-20260127-54"
+    },
+    {
+      "TransactionID": 55,
+      "Date": "2026-01-06",
+      "DebitAccountID": 1010,
+      "DebitAccountName": "Rent Expense",
+      "CreditAccountID": 1009,
+      "CreditAccountName": "Salaries Expense",
+      "Amount": 15005.52,
+      "Description": "Transaction 55",
+      "Reference": "REF-20260106-55"
+    },
+    {
+      "TransactionID": 56,
+      "Date": "2026-01-12",
+      "DebitAccountID": 1009,
+      "DebitAccountName": "Salaries Expense",
+      "CreditAccountID": 1003,
+      "CreditAccountName": "Equipment",
+      "Amount": 1740.8,
+      "Description": "Transaction 56",
+      "Reference": "REF-20260112-56"
+    },
+    {
+      "TransactionID": 57,
+      "Date": "2026-01-23",
+      "DebitAccountID": 1009,
+      "DebitAccountName": "Salaries Expense",
+      "CreditAccountID": 1002,
+      "CreditAccountName": "Accounts Receivable",
+      "Amount": 33852.09,
+      "Description": "Transaction 57",
+      "Reference": "REF-20260123-57"
+    },
+    {
+      "TransactionID": 58,
+      "Date": "2026-01-21",
+      "DebitAccountID": 1007,
+      "DebitAccountName": "Sales Revenue",
+      "CreditAccountID": 1001,
+      "CreditAccountName": "Cash",
+      "Amount": 1120.96,
+      "Description": "Transaction 58",
+      "Reference": "REF-20260121-58"
+    },
+    {
+      "TransactionID": 59,
+      "Date": "2026-01-12",
+      "DebitAccountID": 1009,
+      "DebitAccountName": "Salaries Expense",
+      "CreditAccountID": 1003,
+      "CreditAccountName": "Equipment",
+      "Amount": 49069.1,
+      "Description": "Transaction 59",
+      "Reference": "REF-20260112-59"
+    },
+    {
+      "TransactionID": 60,
+      "Date": "2026-01-01",
+      "DebitAccountID": 1010,
+      "DebitAccountName": "Rent Expense",
+      "CreditAccountID": 1004,
+      "CreditAccountName": "Accounts Payable",
+      "Amount": 29449.94,
+      "Description": "Transaction 60",
+      "Reference": "REF-20260101-60"
+    }
+  ],
+  "expenses": [
+    {
+      "ExpenseID": 1,
+      "EmpID": 1002,
+      "ExpenseDate": "2025-12-03",
+      "Category": "Meals",
+      "Amount": 1586.12,
+      "Description": "Expense 1",
+      "Status": "Pending"
+    },
+    {
+      "ExpenseID": 2,
+      "EmpID": 1011,
+      "ExpenseDate": "2025-12-25",
+      "Category": "Office Supplies",
+      "Amount": 2271.9,
+      "Description": "Expense 2",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 3,
+      "EmpID": 1016,
+      "ExpenseDate": "2026-01-15",
+      "Category": "Meals",
+      "Amount": 7241.5,
+      "Description": "Expense 3",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 4,
+      "EmpID": 1013,
+      "ExpenseDate": "2025-12-19",
+      "Category": "Travel",
+      "Amount": 2292.64,
+      "Description": "Expense 4",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 5,
+      "EmpID": 1006,
+      "ExpenseDate": "2025-12-02",
+      "Category": "Travel",
+      "Amount": 4129.38,
+      "Description": "Expense 5",
+      "Status": "Rejected"
+    },
+    {
+      "ExpenseID": 6,
+      "EmpID": 1015,
+      "ExpenseDate": "2025-12-23",
+      "Category": "Equipment",
+      "Amount": 2179.11,
+      "Description": "Expense 6",
+      "Status": "Rejected"
+    },
+    {
+      "ExpenseID": 7,
+      "EmpID": 1004,
+      "ExpenseDate": "2026-01-06",
+      "Category": "Equipment",
+      "Amount": 2463.23,
+      "Description": "Expense 7",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 8,
+      "EmpID": 1006,
+      "ExpenseDate": "2026-01-13",
+      "Category": "Training",
+      "Amount": 9454.33,
+      "Description": "Expense 8",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 9,
+      "EmpID": 1019,
+      "ExpenseDate": "2025-12-21",
+      "Category": "Travel",
+      "Amount": 5192.66,
+      "Description": "Expense 9",
+      "Status": "Pending"
+    },
+    {
+      "ExpenseID": 10,
+      "EmpID": 1017,
+      "ExpenseDate": "2026-01-23",
+      "Category": "Travel",
+      "Amount": 6122.6,
+      "Description": "Expense 10",
+      "Status": "Rejected"
+    },
+    {
+      "ExpenseID": 11,
+      "EmpID": 1008,
+      "ExpenseDate": "2025-12-13",
+      "Category": "Travel",
+      "Amount": 5977.42,
+      "Description": "Expense 11",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 12,
+      "EmpID": 1015,
+      "ExpenseDate": "2025-12-09",
+      "Category": "Equipment",
+      "Amount": 614.05,
+      "Description": "Expense 12",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 13,
+      "EmpID": 1004,
+      "ExpenseDate": "2025-12-27",
+      "Category": "Meals",
+      "Amount": 754.42,
+      "Description": "Expense 13",
+      "Status": "Rejected"
+    },
+    {
+      "ExpenseID": 14,
+      "EmpID": 1012,
+      "ExpenseDate": "2025-12-28",
+      "Category": "Office Supplies",
+      "Amount": 9451.75,
+      "Description": "Expense 14",
+      "Status": "Rejected"
+    },
+    {
+      "ExpenseID": 15,
+      "EmpID": 1025,
+      "ExpenseDate": "2025-12-13",
+      "Category": "Office Supplies",
+      "Amount": 8806.6,
+      "Description": "Expense 15",
+      "Status": "Pending"
+    },
+    {
+      "ExpenseID": 16,
+      "EmpID": 1004,
+      "ExpenseDate": "2026-01-07",
+      "Category": "Training",
+      "Amount": 1861.29,
+      "Description": "Expense 16",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 17,
+      "EmpID": 1004,
+      "ExpenseDate": "2026-01-02",
+      "Category": "Office Supplies",
+      "Amount": 3603.41,
+      "Description": "Expense 17",
+      "Status": "Rejected"
+    },
+    {
+      "ExpenseID": 18,
+      "EmpID": 1022,
+      "ExpenseDate": "2025-12-13",
+      "Category": "Equipment",
+      "Amount": 3571.54,
+      "Description": "Expense 18",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 19,
+      "EmpID": 1025,
+      "ExpenseDate": "2026-01-02",
+      "Category": "Equipment",
+      "Amount": 9013.91,
+      "Description": "Expense 19",
+      "Status": "Rejected"
+    },
+    {
+      "ExpenseID": 20,
+      "EmpID": 1020,
+      "ExpenseDate": "2025-12-25",
+      "Category": "Meals",
+      "Amount": 6442.67,
+      "Description": "Expense 20",
+      "Status": "Rejected"
+    },
+    {
+      "ExpenseID": 21,
+      "EmpID": 1005,
+      "ExpenseDate": "2025-12-22",
+      "Category": "Office Supplies",
+      "Amount": 1017.68,
+      "Description": "Expense 21",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 22,
+      "EmpID": 1002,
+      "ExpenseDate": "2026-01-24",
+      "Category": "Training",
+      "Amount": 2787.19,
+      "Description": "Expense 22",
+      "Status": "Pending"
+    },
+    {
+      "ExpenseID": 23,
+      "EmpID": 1002,
+      "ExpenseDate": "2026-01-08",
+      "Category": "Office Supplies",
+      "Amount": 1650.24,
+      "Description": "Expense 23",
+      "Status": "Rejected"
+    },
+    {
+      "ExpenseID": 24,
+      "EmpID": 1007,
+      "ExpenseDate": "2026-01-21",
+      "Category": "Office Supplies",
+      "Amount": 1331.61,
+      "Description": "Expense 24",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 25,
+      "EmpID": 1019,
+      "ExpenseDate": "2026-01-11",
+      "Category": "Travel",
+      "Amount": 1464.38,
+      "Description": "Expense 25",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 26,
+      "EmpID": 1015,
+      "ExpenseDate": "2026-01-21",
+      "Category": "Equipment",
+      "Amount": 5911.84,
+      "Description": "Expense 26",
+      "Status": "Pending"
+    },
+    {
+      "ExpenseID": 27,
+      "EmpID": 1023,
+      "ExpenseDate": "2025-12-09",
+      "Category": "Office Supplies",
+      "Amount": 8269.58,
+      "Description": "Expense 27",
+      "Status": "Approved"
+    },
+    {
+      "ExpenseID": 28,
+      "EmpID": 1004,
+      "ExpenseDate": "2025-12-17",
+      "Category": "Office Supplies",
+      "Amount": 9089.84,
+      "Description": "Expense 28",
+      "Status": "Rejected"
+    },
+    {
+      "ExpenseID": 29,
+      "EmpID": 1007,
+      "ExpenseDate": "2026-01-25",
+      "Category": "Equipment",
+      "Amount": 7220.7,
+      "Description": "Expense 29",
+      "Status": "Pending"
+    },
+    {
+      "ExpenseID": 30,
+      "EmpID": 1006,
+      "ExpenseDate": "2025-12-24",
+      "Category": "Office Supplies",
+      "Amount": 4283.67,
+      "Description": "Expense 30",
+      "Status": "Pending"
+    }
+  ]
+}

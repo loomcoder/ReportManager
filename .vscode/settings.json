@@ -1,0 +1,12 @@
+{
+    "remote.portsAttributes": {
+        "3025": {
+            "label": "Report Manager Backend",
+            "onAutoForward": "silent"
+        },
+        "3050": {
+            "label": "Report Manager Frontend",
+            "onAutoForward": "notify"
+        }
+    }
+}

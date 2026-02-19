@@ -1,0 +1,31 @@
+ExpenseID,EmpID,ExpenseDate,Category,Amount,Description,Status
+1,1002,2025-12-03,Meals,1586.12,Expense 1,Pending
+2,1011,2025-12-25,Office Supplies,2271.9,Expense 2,Approved
+3,1016,2026-01-15,Meals,7241.5,Expense 3,Approved
+4,1013,2025-12-19,Travel,2292.64,Expense 4,Approved
+5,1006,2025-12-02,Travel,4129.38,Expense 5,Rejected
+6,1015,2025-12-23,Equipment,2179.11,Expense 6,Rejected
+7,1004,2026-01-06,Equipment,2463.23,Expense 7,Approved
+8,1006,2026-01-13,Training,9454.33,Expense 8,Approved
+9,1019,2025-12-21,Travel,5192.66,Expense 9,Pending
+10,1017,2026-01-23,Travel,6122.6,Expense 10,Rejected
+11,1008,2025-12-13,Travel,5977.42,Expense 11,Approved
+12,1015,2025-12-09,Equipment,614.05,Expense 12,Approved
+13,1004,2025-12-27,Meals,754.42,Expense 13,Rejected
+14,1012,2025-12-28,Office Supplies,9451.75,Expense 14,Rejected
+15,1025,2025-12-13,Office Supplies,8806.6,Expense 15,Pending
+16,1004,2026-01-07,Training,1861.29,Expense 16,Approved
+17,1004,2026-01-02,Office Supplies,3603.41,Expense 17,Rejected
+18,1022,2025-12-13,Equipment,3571.54,Expense 18,Approved
+19,1025,2026-01-02,Equipment,9013.91,Expense 19,Rejected
+20,1020,2025-12-25,Meals,6442.67,Expense 20,Rejected
+21,1005,2025-12-22,Office Supplies,1017.68,Expense 21,Approved
+22,1002,2026-01-24,Training,2787.19,Expense 22,Pending
+23,1002,2026-01-08,Office Supplies,1650.24,Expense 23,Rejected
+24,1007,2026-01-21,Office Supplies,1331.61,Expense 24,Approved
+25,1019,2026-01-11,Travel,1464.38,Expense 25,Approved
+26,1015,2026-01-21,Equipment,5911.84,Expense 26,Pending
+27,1023,2025-12-09,Office Supplies,8269.58,Expense 27,Approved
+28,1004,2025-12-17,Office Supplies,9089.84,Expense 28,Rejected
+29,1007,2026-01-25,Equipment,7220.7,Expense 29,Pending
+30,1006,2025-12-24,Office Supplies,4283.67,Expense 30,Pending

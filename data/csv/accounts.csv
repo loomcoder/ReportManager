@@ -1,0 +1,11 @@
+AccountID,AccountCode,AccountName,AccountType
+1001,1000,Cash,Asset
+1002,1200,Accounts Receivable,Asset
+1003,1500,Equipment,Asset
+1004,2000,Accounts Payable,Liability
+1005,2100,Salary Payable,Liability
+1006,3000,Capital,Equity
+1007,4000,Sales Revenue,Revenue
+1008,5000,COGS,Expense
+1009,5100,Salaries Expense,Expense
+1010,5200,Rent Expense,Expense

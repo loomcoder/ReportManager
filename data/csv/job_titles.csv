@@ -1,0 +1,9 @@
+JobID,JobTitle,DeptID,SalaryMin,SalaryMax
+1,Senior Software Engineer,1,80000,150000
+2,Software Developer,1,50000,90000
+3,Sales Executive,2,40000,70000
+4,Senior Sales Manager,2,70000,120000
+5,Finance Analyst,3,50000,85000
+6,Finance Manager,3,75000,130000
+7,HR Specialist,4,45000,75000
+8,Operations Coordinator,5,35000,60000

@@ -1,0 +1,53 @@
+cubes:
+  - name: data_sources
+    sql_table: main.data_sources
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: name
+        sql: name
+        type: string
+
+      - name: type
+        sql: type
+        type: string
+
+      - name: connectiontype
+        sql: "{CUBE}.\"connectionType\""
+        type: string
+
+      - name: config
+        sql: config
+        type: string
+
+      - name: filemetadata
+        sql: "{CUBE}.\"fileMetadata\""
+        type: string
+
+      - name: status
+        sql: status
+        type: string
+
+      - name: createdat
+        sql: "{CUBE}.\"createdAt\""
+        type: string
+
+      - name: updatedat
+        sql: "{CUBE}.\"updatedAt\""
+        type: string
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+
