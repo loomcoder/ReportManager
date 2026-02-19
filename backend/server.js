@@ -12,6 +12,7 @@ const knex = require('./db-config'); // Initialize Knex
 const { initializeAndSeed } = require('./database'); // Import DB init function
 const logger = require('./logger');
 const { getProjectContext } = require('./project_context');
+const connectionManager = require('./connection_manager');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -68,6 +69,203 @@ const authenticateToken = (req, res, next) => {
         next();
     });
 };
+
+// ==================== HELPERS ====================
+
+async function executeReportData(dataSource, reportConfig) {
+    let columns = [];
+    let rows = [];
+    const selectedColumns = reportConfig.selectedColumns || [];
+    const aggregates = reportConfig.aggregates || {};
+
+    if (dataSource.type === 'excel' || dataSource.type === 'csv') {
+        const fileMetadata = typeof dataSource.fileMetadata === 'string' ? JSON.parse(dataSource.fileMetadata) : dataSource.fileMetadata;
+        if (!fileMetadata || !fileMetadata.filePath) {
+            throw new Error("File source missing file path");
+        }
+
+        const filePath = fileMetadata.filePath;
+        if (!fs.existsSync(filePath)) {
+            throw new Error("File not found on server");
+        }
+
+        const workbook = xlsx.readFile(filePath);
+        const sheetName = reportConfig.sheetName || fileMetadata.sheetName || workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+
+        if (jsonData.length > 0) {
+            columns = jsonData[0];
+            const dataRows = jsonData.slice(1);
+            rows = dataRows.map(row => {
+                const rowObj = {};
+                columns.forEach((col, index) => {
+                    rowObj[col] = row[index];
+                });
+                return rowObj;
+            });
+        }
+    } else if (['postgres', 'mysql'].includes(dataSource.type)) {
+        // REAL DB EXECUTION
+        const db = await connectionManager.getConnection(dataSource);
+        const query = reportConfig.query;
+        
+        if (!query) {
+            throw new Error("No SQL query provided for database source");
+        }
+
+        const result = await db.raw(query);
+        
+        // Knex result format varies by driver
+        if (dataSource.type === 'postgres') {
+            rows = result.rows;
+            columns = result.fields.map(f => f.name);
+        } else if (dataSource.type === 'mysql') {
+            rows = result[0];
+            columns = result[1].map(f => f.name);
+        }
+    } else if (['sqlserver', 'mongodb', 'oracle'].includes(dataSource.type)) {
+        // Fallback for types not yet implemented with real drivers
+        const query = reportConfig.query || "";
+        let mockColumns = ['id', 'name', 'value', 'date', 'category'];
+        if (query.toLowerCase().includes('select')) {
+            const selectMatch = query.match(/select\s+(.*?)\s+from/i);
+            if (selectMatch && selectMatch[1] !== '*') {
+                mockColumns = selectMatch[1].split(',').map(col => col.trim().split(' ').pop());
+            }
+        }
+        if (reportConfig.xAxis && !mockColumns.includes(reportConfig.xAxis)) {
+            mockColumns.push(reportConfig.xAxis);
+        }
+        if (reportConfig.yAxis && !mockColumns.includes(reportConfig.yAxis)) {
+            mockColumns.push(reportConfig.yAxis);
+        }
+        columns = mockColumns;
+        rows = Array.from({ length: 25 }, (_, i) => {
+            const row = {};
+            mockColumns.forEach(col => {
+                if (col === 'id') {
+                    row[col] = i + 1;
+                } else if (col.toLowerCase().includes('date') || col === reportConfig.xAxis) {
+                    row[col] = new Date(Date.now() - i * 86400000 * 30).toISOString().split('T')[0];
+                } else if (col.toLowerCase().includes('name') || col.toLowerCase().includes('category') || col === 'month') {
+                    const names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                    row[col] = names[i % names.length];
+                } else if (col.toLowerCase().includes('revenue') || col.toLowerCase().includes('amount') || col.toLowerCase().includes('value') || col === reportConfig.yAxis) {
+                    row[col] = Math.floor(Math.random() * 50000) + 10000;
+                } else {
+                    row[col] = `${col}_${i + 1}`;
+                }
+            });
+            return row;
+        });
+    } else {
+        columns = ['metric', 'value'];
+        rows = [
+            { metric: 'Revenue', value: 50000 },
+            { metric: 'Cost', value: 30000 },
+            { metric: 'Profit', value: 20000 }
+        ];
+    }
+
+    // 1. Filter Columns
+    if (selectedColumns && selectedColumns.length > 0) {
+        rows = rows.map(row => {
+            const newRow = {};
+            selectedColumns.forEach(col => {
+                if (row.hasOwnProperty(col)) {
+                    newRow[col] = row[col];
+                }
+            });
+            return newRow;
+        });
+        columns = selectedColumns;
+    }
+
+    // 2. Apply Aggregation
+    const aggregateKeys = Object.keys(aggregates);
+    if (aggregateKeys.length > 0) {
+        const groupByColumns = columns.filter(col => !aggregateKeys.includes(col));
+
+        if (groupByColumns.length > 0) {
+            const groups = {};
+
+            rows.forEach(row => {
+                const groupKey = groupByColumns.map(col => row[col]).join('|||');
+                if (!groups[groupKey]) {
+                    groups[groupKey] = {
+                        _count: 0,
+                        _data: {},
+                        _firstRow: row
+                    };
+                    aggregateKeys.forEach(key => {
+                        groups[groupKey]._data[key] = [];
+                    });
+                }
+                groups[groupKey]._count++;
+                aggregateKeys.forEach(key => {
+                    groups[groupKey]._data[key].push(row[key]);
+                });
+            });
+
+            rows = Object.keys(groups).map(groupKey => {
+                const group = groups[groupKey];
+                const resultRow = {};
+                groupByColumns.forEach(col => {
+                    resultRow[col] = group._firstRow[col];
+                });
+
+                aggregateKeys.forEach(key => {
+                    const values = group._data[key];
+                    const type = aggregates[key];
+                    let result = 0;
+
+                    if (type === 'SUM') {
+                        result = values.reduce((a, b) => a + (Number(b) || 0), 0);
+                    } else if (type === 'AVG') {
+                        const sum = values.reduce((a, b) => a + (Number(b) || 0), 0);
+                        result = values.length ? sum / values.length : 0;
+                    } else if (type === 'COUNT') {
+                        result = values.length;
+                    } else if (type === 'MIN') {
+                        result = Math.min(...values.map(v => Number(v) || 0));
+                    } else if (type === 'MAX') {
+                        result = Math.max(...values.map(v => Number(v) || 0));
+                    }
+
+                    resultRow[key] = result;
+                });
+                return resultRow;
+            });
+        } else {
+            const resultRow = {};
+            aggregateKeys.forEach(key => {
+                const values = rows.map(r => r[key]);
+                const type = aggregates[key];
+                let result = 0;
+
+                if (type === 'SUM') {
+                    result = values.reduce((a, b) => a + (Number(b) || 0), 0);
+                } else if (type === 'AVG') {
+                    const sum = values.reduce((a, b) => a + (Number(b) || 0), 0);
+                    result = values.length ? sum / values.length : 0;
+                } else if (type === 'COUNT') {
+                    result = values.length;
+                } else if (type === 'MIN') {
+                    result = Math.min(...values.map(v => Number(v) || 0));
+                } else if (type === 'MAX') {
+                    result = Math.max(...values.map(v => Number(v) || 0));
+                }
+
+                resultRow[key] = result;
+            });
+            rows = [resultRow];
+            columns = aggregateKeys;
+        }
+    }
+
+    return { columns, rows };
+}
 
 // ==================== HEALTH CHECK ====================
 app.get('/health', (req, res) => {
@@ -368,184 +566,8 @@ app.post('/reports/:id/run', authenticateToken, async (req, res) => {
         const dataSource = await knex('data_sources').where({ id: report.sourceId }).first();
         if (!dataSource) return res.status(400).json({ message: "Data source not found" });
 
-        // ... (Report generation logic remains largely same, assuming mock data or specific implementations)
-        // For real DB execution, we would need to implementation actual connection logic here
-        // But the previous implementation had mock data generation for DBs anyway. 
-        // We will keep the logic same but wrap in try/catch block properly.
-
-        // --- COPIED logic from previous server.js for data processing ---
-        let columns = [];
-        let rows = [];
         const reportConfig = JSON.parse(report.config);
-        const selectedColumns = reportConfig.selectedColumns || [];
-        const aggregates = reportConfig.aggregates || {};
-
-        if (dataSource.type === 'excel' || dataSource.type === 'csv') {
-            const fileMetadata = JSON.parse(dataSource.fileMetadata);
-            if (!fileMetadata || !fileMetadata.filePath) {
-                return res.status(400).json({ message: "File source missing file path" });
-            }
-
-            const filePath = fileMetadata.filePath;
-            if (!fs.existsSync(filePath)) {
-                return res.status(404).json({ message: "File not found on server" });
-            }
-
-            const workbook = xlsx.readFile(filePath);
-            const sheetName = reportConfig.sheetName || fileMetadata.sheetName || workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
-
-            if (jsonData.length > 0) {
-                columns = jsonData[0];
-                const dataRows = jsonData.slice(1);
-                rows = dataRows.map(row => {
-                    const rowObj = {};
-                    columns.forEach((col, index) => {
-                        rowObj[col] = row[index];
-                    });
-                    return rowObj;
-                });
-            }
-        } else if (['postgres', 'mysql', 'sqlserver', 'mongodb', 'oracle'].includes(dataSource.type)) {
-            // Mock Data Generation (Same as before)
-            const query = reportConfig.query || "";
-            let mockColumns = ['id', 'name', 'value', 'date', 'category'];
-            if (query.toLowerCase().includes('select')) {
-                const selectMatch = query.match(/select\s+(.*?)\s+from/i);
-                if (selectMatch && selectMatch[1] !== '*') {
-                    mockColumns = selectMatch[1].split(',').map(col => col.trim().split(' ').pop());
-                }
-            }
-            if (reportConfig.xAxis && !mockColumns.includes(reportConfig.xAxis)) {
-                mockColumns.push(reportConfig.xAxis);
-            }
-            if (reportConfig.yAxis && !mockColumns.includes(reportConfig.yAxis)) {
-                mockColumns.push(reportConfig.yAxis);
-            }
-            columns = mockColumns;
-            rows = Array.from({ length: 25 }, (_, i) => {
-                const row = {};
-                mockColumns.forEach(col => {
-                    if (col === 'id') {
-                        row[col] = i + 1;
-                    } else if (col.toLowerCase().includes('date') || col === reportConfig.xAxis) {
-                        row[col] = new Date(Date.now() - i * 86400000 * 30).toISOString().split('T')[0];
-                    } else if (col.toLowerCase().includes('name') || col.toLowerCase().includes('category') || col === 'month') {
-                        const names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-                        row[col] = names[i % names.length];
-                    } else if (col.toLowerCase().includes('revenue') || col.toLowerCase().includes('amount') || col.toLowerCase().includes('value') || col === reportConfig.yAxis) {
-                        row[col] = Math.floor(Math.random() * 50000) + 10000;
-                    } else {
-                        row[col] = `${col}_${i + 1}`;
-                    }
-                });
-                return row;
-            });
-        } else {
-            columns = ['metric', 'value'];
-            rows = [
-                { metric: 'Revenue', value: 50000 },
-                { metric: 'Cost', value: 30000 },
-                { metric: 'Profit', value: 20000 }
-            ];
-        }
-
-        // 1. Filter Columns
-        if (selectedColumns && selectedColumns.length > 0) {
-            rows = rows.map(row => {
-                const newRow = {};
-                selectedColumns.forEach(col => {
-                    if (row.hasOwnProperty(col)) {
-                        newRow[col] = row[col];
-                    }
-                });
-                return newRow;
-            });
-            columns = selectedColumns;
-        }
-
-        // 2. Apply Aggregation
-        const aggregateKeys = Object.keys(aggregates);
-        if (aggregateKeys.length > 0) {
-            const groupByColumns = columns.filter(col => !aggregateKeys.includes(col));
-
-            if (groupByColumns.length > 0) {
-                const groups = {};
-
-                rows.forEach(row => {
-                    const groupKey = groupByColumns.map(col => row[col]).join('|||');
-                    if (!groups[groupKey]) {
-                        groups[groupKey] = {
-                            _count: 0,
-                            _data: {},
-                            _firstRow: row
-                        };
-                        aggregateKeys.forEach(key => {
-                            groups[groupKey]._data[key] = [];
-                        });
-                    }
-                    groups[groupKey]._count++;
-                    aggregateKeys.forEach(key => {
-                        groups[groupKey]._data[key].push(row[key]);
-                    });
-                });
-
-                rows = Object.keys(groups).map(groupKey => {
-                    const group = groups[groupKey];
-                    const resultRow = {};
-                    groupByColumns.forEach(col => {
-                        resultRow[col] = group._firstRow[col];
-                    });
-
-                    aggregateKeys.forEach(key => {
-                        const values = group._data[key];
-                        const type = aggregates[key];
-                        let result = 0;
-
-                        if (type === 'SUM') {
-                            result = values.reduce((a, b) => a + (Number(b) || 0), 0);
-                        } else if (type === 'AVG') {
-                            const sum = values.reduce((a, b) => a + (Number(b) || 0), 0);
-                            result = values.length ? sum / values.length : 0;
-                        } else if (type === 'COUNT') {
-                            result = values.length;
-                        } else if (type === 'MIN') {
-                            result = Math.min(...values.map(v => Number(v) || 0));
-                        } else if (type === 'MAX') {
-                            result = Math.max(...values.map(v => Number(v) || 0));
-                        }
-
-                        resultRow[key] = result;
-                    });
-                    return resultRow;
-                });
-            } else {
-                const resultRow = {};
-                aggregateKeys.forEach(key => {
-                    const values = rows.map(r => r[key]);
-                    const type = aggregates[key];
-                    let result = 0;
-
-                    if (type === 'SUM') {
-                        result = values.reduce((a, b) => a + (Number(b) || 0), 0);
-                    } else if (type === 'AVG') {
-                        const sum = values.reduce((a, b) => a + (Number(b) || 0), 0);
-                        result = values.length ? sum / values.length : 0;
-                    } else if (type === 'COUNT') {
-                        result = values.length;
-                    } else if (type === 'MIN') {
-                        result = Math.min(...values.map(v => Number(v) || 0));
-                    } else if (type === 'MAX') {
-                        result = Math.max(...values.map(v => Number(v) || 0));
-                    }
-
-                    resultRow[key] = result;
-                });
-                rows = [resultRow];
-                columns = aggregateKeys;
-            }
-        }
+        const { columns, rows } = await executeReportData(dataSource, reportConfig);
 
         res.json({
             report: {
@@ -562,175 +584,13 @@ app.post('/reports/:id/run', authenticateToken, async (req, res) => {
 });
 
 app.post('/reports/preview', authenticateToken, async (req, res) => {
-    // Similar logic to run report but does not check existing report ID
     const { sourceId, config } = req.body;
-
-    // ... Copying logic is repetitive but safe for now. 
-    // In a real refactor we should extract this logic to a service handling DataSources.
-    // For now, let's just do the minimal to enable async DB calls for Data Source fetching.
 
     try {
         const dataSource = await knex('data_sources').where({ id: sourceId }).first();
         if (!dataSource) return res.status(400).json({ message: "Data source not found" });
 
-        // ... (Same Mock Logic as above) ...
-        let columns = [];
-        let rows = [];
-        const reportConfig = config;
-        const selectedColumns = reportConfig.selectedColumns || [];
-        const aggregates = reportConfig.aggregates || {};
-
-        if (dataSource.type === 'excel' || dataSource.type === 'csv') {
-            const fileMetadata = JSON.parse(dataSource.fileMetadata);
-            if (!fileMetadata || !fileMetadata.filePath) {
-                return res.status(400).json({ message: "File source missing file path" });
-            }
-
-            const filePath = fileMetadata.filePath;
-            if (!fs.existsSync(filePath)) {
-                return res.status(404).json({ message: "File not found on server" });
-            }
-
-            const workbook = xlsx.readFile(filePath);
-            const sheetName = reportConfig.sheetName || fileMetadata.sheetName || workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
-
-            if (jsonData.length > 0) {
-                columns = jsonData[0];
-                const dataRows = jsonData.slice(1);
-                rows = dataRows.map(row => {
-                    const rowObj = {};
-                    columns.forEach((col, index) => {
-                        rowObj[col] = row[index];
-                    });
-                    return rowObj;
-                });
-            }
-        } else if (['postgres', 'mysql', 'sqlserver', 'mongodb', 'oracle'].includes(dataSource.type)) {
-            // Mock Data Generation
-            const query = reportConfig.query || "";
-            let mockColumns = ['id', 'name', 'value', 'date', 'category'];
-            if (query.toLowerCase().includes('select')) {
-                const selectMatch = query.match(/select\s+(.*?)\s+from/i);
-                if (selectMatch && selectMatch[1] !== '*') {
-                    mockColumns = selectMatch[1].split(',').map(col => col.trim().split(' ').pop());
-                }
-            }
-            if (reportConfig.xAxis && !mockColumns.includes(reportConfig.xAxis)) {
-                mockColumns.push(reportConfig.xAxis);
-            }
-            if (reportConfig.yAxis && !mockColumns.includes(reportConfig.yAxis)) {
-                mockColumns.push(reportConfig.yAxis);
-            }
-            columns = mockColumns;
-            rows = Array.from({ length: 25 }, (_, i) => {
-                const row = {};
-                mockColumns.forEach(col => {
-                    if (col === 'id') {
-                        row[col] = i + 1;
-                    } else if (col.toLowerCase().includes('date') || col === reportConfig.xAxis) {
-                        row[col] = new Date(Date.now() - i * 86400000 * 30).toISOString().split('T')[0];
-                    } else if (col.toLowerCase().includes('name') || col.toLowerCase().includes('category') || col === 'month') {
-                        const names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-                        row[col] = names[i % names.length];
-                    } else if (col.toLowerCase().includes('revenue') || col.toLowerCase().includes('amount') || col.toLowerCase().includes('value') || col === reportConfig.yAxis) {
-                        row[col] = Math.floor(Math.random() * 50000) + 10000;
-                    } else {
-                        row[col] = `${col}_${i + 1}`;
-                    }
-                });
-                return row;
-            });
-        } else {
-            columns = ['metric', 'value'];
-            rows = [
-                { metric: 'Revenue', value: 50000 },
-                { metric: 'Cost', value: 30000 },
-                { metric: 'Profit', value: 20000 }
-            ];
-        }
-
-        // 1. Filter Columns
-        if (selectedColumns && selectedColumns.length > 0) {
-            rows = rows.map(row => {
-                const newRow = {};
-                selectedColumns.forEach(col => {
-                    if (row.hasOwnProperty(col)) {
-                        newRow[col] = row[col];
-                    }
-                });
-                return newRow;
-            });
-            columns = selectedColumns;
-        }
-
-        // 2. Aggregates (Simplified reuse)
-        const aggregateKeys = Object.keys(aggregates);
-        if (aggregateKeys.length > 0) {
-            const groupByColumns = columns.filter(col => !aggregateKeys.includes(col));
-            if (groupByColumns.length > 0) {
-                const groups = {};
-                rows.forEach(row => {
-                    const groupKey = groupByColumns.map(col => row[col]).join('|||');
-                    if (!groups[groupKey]) {
-                        groups[groupKey] = { _count: 0, _data: {}, _firstRow: row };
-                        aggregateKeys.forEach(key => { groups[groupKey]._data[key] = []; });
-                    }
-                    groups[groupKey]._count++;
-                    aggregateKeys.forEach(key => { groups[groupKey]._data[key].push(row[key]); });
-                });
-                rows = Object.keys(groups).map(groupKey => {
-                    const group = groups[groupKey];
-                    const resultRow = {};
-                    groupByColumns.forEach(col => { resultRow[col] = group._firstRow[col]; });
-                    aggregateKeys.forEach(key => {
-                        const values = group._data[key];
-                        const type = aggregates[key];
-                        let result = 0;
-
-                        if (type === 'SUM') {
-                            result = values.reduce((a, b) => a + (Number(b) || 0), 0);
-                        } else if (type === 'AVG') {
-                            const sum = values.reduce((a, b) => a + (Number(b) || 0), 0);
-                            result = values.length ? sum / values.length : 0;
-                        } else if (type === 'COUNT') {
-                            result = values.length;
-                        } else if (type === 'MIN') {
-                            result = Math.min(...values.map(v => Number(v) || 0));
-                        } else if (type === 'MAX') {
-                            result = Math.max(...values.map(v => Number(v) || 0));
-                        }
-                        resultRow[key] = result;
-                    });
-                    return resultRow;
-                });
-            } else {
-                // Same as before
-                const resultRow = {};
-                aggregateKeys.forEach(key => {
-                    const values = rows.map(r => r[key]);
-                    const type = aggregates[key];
-                    let result = 0;
-
-                    if (type === 'SUM') {
-                        result = values.reduce((a, b) => a + (Number(b) || 0), 0);
-                    } else if (type === 'AVG') {
-                        const sum = values.reduce((a, b) => a + (Number(b) || 0), 0);
-                        result = values.length ? sum / values.length : 0;
-                    } else if (type === 'COUNT') {
-                        result = values.length;
-                    } else if (type === 'MIN') {
-                        result = Math.min(...values.map(v => Number(v) || 0));
-                    } else if (type === 'MAX') {
-                        result = Math.max(...values.map(v => Number(v) || 0));
-                    }
-                    resultRow[key] = result;
-                });
-                rows = [resultRow];
-                columns = aggregateKeys;
-            }
-        }
+        const { columns, rows } = await executeReportData(dataSource, config);
 
         res.json({
             data: { columns, rows }
@@ -1000,9 +860,43 @@ app.post('/data-sources/preview', authenticateToken, upload.single('file'), asyn
                     message: "Failed to process file: " + fileErr.message
                 });
             }
-        } else if (['postgres', 'mysql', 'sqlserver', 'mongodb', 'oracle'].includes(type)) {
-            // Generate mock data for database preview
-            // In a real implementation, you would connect to the database and fetch actual data
+        } else if (['postgres', 'mysql'].includes(type)) {
+            try {
+                // REAL DB PREVIEW
+                const db = await connectionManager.getConnection({
+                    type,
+                    config: req.body.config,
+                    name: 'Preview Connection'
+                });
+                
+                let query = req.body.query;
+                if (!query) {
+                    if (req.body.tableName) {
+                        query = `SELECT * FROM ${req.body.tableName} LIMIT 10`;
+                    } else {
+                        return res.status(400).json({ status: 'error', message: "Query or Table Name is required for database preview" });
+                    }
+                }
+
+                const result = await db.raw(query);
+                if (type === 'postgres') {
+                    rows = result.rows.slice(0, 10);
+                    columns = result.fields.map(f => f.name);
+                } else if (type === 'mysql') {
+                    rows = result[0].slice(0, 10);
+                    columns = result[1].map(f => f.name);
+                }
+
+                res.json({
+                    status: 'success',
+                    data: { columns, rows }
+                });
+            } catch (dbErr) {
+                logger.error('DB Preview error:', dbErr);
+                res.status(500).json({ status: 'error', message: "Failed to fetch DB preview: " + dbErr.message });
+            }
+        } else if (['sqlserver', 'mongodb', 'oracle'].includes(type)) {
+            // Generate mock data for database preview (fallback)
             const mockColumns = ['id', 'name', 'value', 'date', 'category'];
             columns = mockColumns;
             rows = Array.from({ length: 10 }, (_, i) => ({
@@ -1078,7 +972,35 @@ app.post('/data-sources/columns', authenticateToken, async (req, res) => {
             if (jsonData.length > 0) {
                 columns = jsonData[0]; // First row as headers
             }
-        } else if (['postgres', 'mysql', 'sqlserver', 'mongodb', 'oracle'].includes(dataSource.type)) {
+        } else if (['postgres', 'mysql'].includes(dataSource.type)) {
+            try {
+                // REAL DB COLUMNS FETCH
+                const db = await connectionManager.getConnection(dataSource);
+                let query = config?.query;
+                
+                if (!query && dataSource.config) {
+                    const dsConfig = typeof dataSource.config === 'string' ? JSON.parse(dataSource.config) : dataSource.config;
+                    if (dsConfig.tableName) {
+                        query = `SELECT * FROM ${dsConfig.tableName} LIMIT 1`;
+                    }
+                }
+
+                if (query) {
+                    const result = await db.raw(query + (query.toLowerCase().includes('limit') ? '' : ' LIMIT 1'));
+                    if (dataSource.type === 'postgres') {
+                        columns = result.fields.map(f => f.name);
+                    } else if (dataSource.type === 'mysql') {
+                        columns = result[1].map(f => f.name);
+                    }
+                } else {
+                    // Fallback to mock if no query/table found
+                    columns = ['id', 'name', 'value', 'date', 'category'];
+                }
+            } catch (dbErr) {
+                logger.error('Error fetching DB columns:', dbErr);
+                columns = ['id', 'name', 'value', 'date', 'category']; // Fallback
+            }
+        } else if (['sqlserver', 'mongodb', 'oracle'].includes(dataSource.type)) {
             // For database sources, return mock columns
             // In a real implementation, you would execute the query and get actual column names
             columns = ['id', 'name', 'value', 'date', 'category'];
