@@ -2,7 +2,7 @@ const axios = require('axios');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
-const API_URL = 'http://report-manager-backend:3025';
+const API_URL = 'http://localhost:3025';
 
 async function runTest() {
     console.log('🚀 Starting Background Worker Smoke Test...');

@@ -15,6 +15,7 @@ const { getProjectContext } = require('./project_context');
 const connectionManager = require('./connection_manager');
 const cubeSchemaManager = require('./cube_schema_manager');
 const schedulerManager = require('./scheduler');
+const aiExtractor = require('./ai_data_extractor');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -1753,9 +1754,13 @@ app.post('/chat/conversations/:id/messages', authenticateToken, async (req, res)
             let intent = 'general';
 
             // 1. Intent Classification (Keyword-based)
-            const reportKeywords = ['report', 'chart', 'graph', 'visualization', 'analysis', 'sales', 'growth', 'pie'];
+            const reportKeywords = ['report', 'chart', 'graph', 'visualization', 'analysis', 'sales', 'growth', 'pie', 'data', 'analyze'];
             const dashboardKeywords = ['dashboard', 'overview', 'summary', 'layout', 'widget'];
             const sourceKeywords = ['data', 'source', 'connection', 'database', 'excel', 'csv', 'upload', 'sql'];
+
+            // Data query intent detection
+            const dataQueryKeywords = ['highest', 'lowest', 'total', 'average', 'sum', 'mean', 'max', 'min', 'value of', 'amount of', 'revenue', 'sales'];
+            const isDataQuery = dataQueryKeywords.some(k => queryLower.includes(k));
 
             // Project-related keywords (specific to this application)
             const projectKeywords = [
@@ -1826,17 +1831,25 @@ app.post('/chat/conversations/:id/messages', authenticateToken, async (req, res)
             else if (isDashboardIntent) intent = 'dashboard';
             else if (isSourceIntent) intent = 'datasource';
 
-            logger.logDebug('Determined query intent', { intent, isProjectRelated });
+            logger.logDebug('Determined query intent', { intent, isProjectRelated, isDataQuery });
 
             // 2. Retrieval (Targeted SQL Search)
             // Fetch relevant items based on query + generic items if intent matches
-            if (isReportIntent || intent === 'general') {
+            if (isReportIntent || intent === 'general' || isDataQuery) {
                 relevantReports = await knex('reports')
                     .where('name', 'like', `%${content}%`)
                     .orWhere('description', 'like', `%${content}%`)
-                    .orWhereRaw('? LIKE ?', ['1', '1']) // Fallback to include all if query is generic? No, let's limit.
-                    // Actually, for better UX, if no specific keyword match, maybe fetch top 5 recent?
                     .limit(10);
+
+                // Try fuzzy name matching for reports if user is asking about a specific one
+                if (relevantReports.length === 0) {
+                    const allReports = await knex('reports').select('id', 'name');
+                    for (const r of allReports) {
+                        if (queryLower.includes(r.name.toLowerCase())) {
+                            relevantReports.push(await knex('reports').where({ id: r.id }).first());
+                        }
+                    }
+                }
 
                 // If specific search yielded nothing, and intent is explicit, fetch all (small scale)
                 if (relevantReports.length === 0 && isReportIntent) {
@@ -1864,28 +1877,32 @@ app.post('/chat/conversations/:id/messages', authenticateToken, async (req, res)
                 }
             }
 
-            // If general query (e.g. "what do I have?"), fetch a summary of everything
-            if (intent === 'general') {
-                const [allReports, allDashboards, allSources] = await Promise.all([
-                    knex('reports').select('name', 'description').limit(10),
-                    knex('dashboards').select('name', 'description').limit(10),
-                    knex('data_sources').select('name', 'type').limit(10)
-                ]);
-                relevantReports = allReports;
-                relevantDashboards = allDashboards;
-                relevantDataSources = allSources;
-            }
-
             // 3. Context Construction
             let dynamicContext = "# LIVE SYSTEM DATA (Authoritative)\n";
             dynamicContext += "Use this data to answer questions about existing reports, dashboards, and data sources.\n";
             dynamicContext += "Rules:\n";
             dynamicContext += "- ONLY answer based on this provided data and the attached code context.\n";
-            dynamicContext += "- If the information is not here, state that it is not available in the current context.\n\n";
+            dynamicContext += "- If the information is not here, state that it is not available in the current context.\n";
+            dynamicContext += "- When analyzing report tables, provide specific numbers and insights based ON THE DATA provided.\n\n";
 
             if (relevantReports.length > 0) {
                 dynamicContext += "## matching Reports:\n";
-                relevantReports.forEach(r => dynamicContext += `- ${r.name}: ${r.description || 'No description'}\n`);
+                for (const r of relevantReports) {
+                    dynamicContext += `- ${r.name} (ID: ${r.id}): ${r.description || 'No description'}\n`;
+                    
+                    // If this report is likely what the user is asking about, pull its actual data
+                    if (isDataQuery || queryLower.includes(r.name.toLowerCase())) {
+                        try {
+                            const data = await aiExtractor.getReportDataForAI(r.id);
+                            if (data) {
+                                dynamicContext += aiExtractor.summarizeDataForAI(data) + "\n";
+                                logger.logActivity('Injected live data from report', { reportName: r.name });
+                            }
+                        } catch (dataErr) {
+                            logger.error(`Failed to pull data for report ${r.id}`, dataErr);
+                        }
+                    }
+                }
             }
 
             if (relevantDashboards.length > 0) {
