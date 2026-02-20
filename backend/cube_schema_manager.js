@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const logger = require('./logger');
 
-const SCHEMA_DIR = path.resolve(__dirname, 'schema/cubes');
+const SCHEMA_DIR = path.resolve(__dirname, 'schema');
 
 /**
  * Ensures the schema directory exists

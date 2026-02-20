@@ -69,7 +69,7 @@ const authenticateToken = (req, res, next) => {
 
     jwt.verify(token, SECRET_KEY, (err, user) => {
         if (err) return res.sendStatus(403);
-        
+
         // Ensure roles and permissions are always arrays even if token was issued before the schema change
         req.user = {
             ...user,
@@ -96,13 +96,13 @@ function detectSchema(columns, sampleRows) {
         const types = sampleRows
             .map(row => inferType(row[col] || row[idx]))
             .filter(t => t !== 'string' || (sampleRows[0] && (sampleRows[0][col] || sampleRows[0][idx]) !== ''));
-        
+
         // Majority vote for type
         const typeCounts = types.reduce((acc, t) => {
             acc[t] = (acc[t] || 0) + 1;
             return acc;
         }, {});
-        
+
         let detectedType = 'string';
         let maxCount = 0;
         for (const [type, count] of Object.entries(typeCounts)) {
@@ -111,7 +111,7 @@ function detectSchema(columns, sampleRows) {
                 detectedType = type;
             }
         }
-        
+
         return { name: col, type: detectedType };
     });
 }
@@ -153,13 +153,13 @@ async function executeReportData(dataSource, reportConfig) {
         // REAL DB EXECUTION
         const db = await connectionManager.getConnection(dataSource);
         const query = reportConfig.query;
-        
+
         if (!query) {
             throw new Error("No SQL query provided for database source");
         }
 
         const result = await db.raw(query);
-        
+
         // Knex result format varies by driver
         if (dataSource.type === 'postgres') {
             rows = result.rows;
@@ -311,6 +311,7 @@ async function executeReportData(dataSource, reportConfig) {
     return { columns, rows };
 }
 
+
 // ==================== HEALTH CHECK ====================
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date(), uptime: process.uptime() });
@@ -350,13 +351,13 @@ app.post('/login', async (req, res) => {
         if (user) {
             const roles = JSON.parse(user.roles);
             const permissions = JSON.parse(user.permissions);
-            const token = jwt.sign({ 
-                id: user.id, 
-                email: user.email, 
+            const token = jwt.sign({
+                id: user.id,
+                email: user.email,
                 roles,
                 permissions
             }, SECRET_KEY, { expiresIn: '1h' });
-            
+
             logger.logAudit(user.id, 'User logged in', { email: user.email });
 
             res.json({
@@ -403,9 +404,9 @@ app.post('/register', async (req, res) => {
         // For SQLite compatibility (knex .insert returns [id] for sqlite too usually, but let's be safe)
         const userId = typeof id === 'object' ? id.id : id;
 
-        const token = jwt.sign({ 
-            id: userId, 
-            email, 
+        const token = jwt.sign({
+            id: userId,
+            email,
             roles: ["USER"],
             permissions: ["VIEW_REPORTS"]
         }, SECRET_KEY, { expiresIn: '1h' });
@@ -873,7 +874,7 @@ app.delete('/data-sources/:id', authenticateToken, checkPermission('DELETE_DATA_
         }
 
         await knex('data_sources').where({ id: req.params.id }).del();
-        
+
         logger.logAudit(req.user.id, 'Deleted data source', { dataSourceId: req.params.id });
 
         // Remove Cube.js schema
@@ -988,7 +989,7 @@ app.post('/data-sources/preview', authenticateToken, checkPermission('VIEW_DATA_
                     config: req.body.config,
                     name: 'Preview Connection'
                 });
-                
+
                 let query = req.body.query;
                 if (!query) {
                     if (req.body.tableName) {
@@ -1104,7 +1105,7 @@ app.post('/data-sources/columns', authenticateToken, checkPermission('VIEW_DATA_
                 // REAL DB COLUMNS FETCH
                 const db = await connectionManager.getConnection(dataSource);
                 let query = config?.query;
-                
+
                 if (!query && dataSource.config) {
                     const dsConfig = typeof dataSource.config === 'string' ? JSON.parse(dataSource.config) : dataSource.config;
                     if (dsConfig.tableName) {
@@ -1192,7 +1193,7 @@ app.post('/dashboards', authenticateToken, checkPermission('CREATE_REPORTS'), as
         }).returning('id');
 
         const dashboardId = typeof id === 'object' ? id.id : id;
-        
+
         logger.logAudit(req.user.id, 'Created dashboard', { dashboardId, name });
 
         const newDashboard = await knex('dashboards').where({ id: dashboardId }).first();
@@ -1944,7 +1945,7 @@ app.post('/chat/conversations/:id/messages', authenticateToken, async (req, res)
                 dynamicContext += "## matching Reports:\n";
                 for (const r of relevantReports) {
                     dynamicContext += `- ${r.name} (ID: ${r.id}): ${r.description || 'No description'}\n`;
-                    
+
                     // If this report is likely what the user is asking about, pull its actual data
                     if (isDataQuery || queryLower.includes(r.name.toLowerCase())) {
                         try {

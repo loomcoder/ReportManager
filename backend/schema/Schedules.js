@@ -77,9 +77,9 @@ cube('Schedules', {
     },
 
     preAggregations: {
-        taskTypeBreakdown: {
-            measures: [CUBE.count, CUBE.activeCount],
-            dimensions: [CUBE.taskType]
-        }
+        // taskTypeBreakdown: {
+        //     measures: [CUBE.count, CUBE.activeCount],
+        //     dimensions: [CUBE.taskType]
+        // }
     }
 });

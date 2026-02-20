@@ -86,9 +86,9 @@ cube('DataSources', {
     },
 
     preAggregations: {
-        typeBreakdown: {
-            measures: [CUBE.count],
-            dimensions: [CUBE.type]
-        }
+        // typeBreakdown: {
+        //     measures: [CUBE.count],
+        //     dimensions: [CUBE.type]
+        // }
     }
 });

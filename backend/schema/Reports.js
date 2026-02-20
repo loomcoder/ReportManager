@@ -3,7 +3,7 @@ cube('Reports', {
 
     joins: {
         DataSources: {
-            sql: `${CUBE}.sourceId = ${DataSources}.id`,
+            sql: `${CUBE}.sourceId = DataSources.id`,
             relationship: 'belongsTo'
         }
     },
@@ -55,10 +55,10 @@ cube('Reports', {
     },
 
     preAggregations: {
-        main: {
-            measures: [CUBE.count],
-            timeDimension: CUBE.createdAt,
-            granularity: 'day'
-        }
+        // main: {
+        //     measures: [CUBE.count],
+        //     timeDimension: CUBE.createdAt,
+        //     granularity: 'day'
+        // }
     }
 });
