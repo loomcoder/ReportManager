@@ -16,6 +16,7 @@ const connectionManager = require('./connection_manager');
 const cubeSchemaManager = require('./cube_schema_manager');
 const schedulerManager = require('./scheduler');
 const aiExtractor = require('./ai_data_extractor');
+const { checkPermission, checkRole } = require('./rbac_middleware');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -68,7 +69,13 @@ const authenticateToken = (req, res, next) => {
 
     jwt.verify(token, SECRET_KEY, (err, user) => {
         if (err) return res.sendStatus(403);
-        req.user = user;
+        
+        // Ensure roles and permissions are always arrays even if token was issued before the schema change
+        req.user = {
+            ...user,
+            roles: Array.isArray(user.roles) ? user.roles : [],
+            permissions: Array.isArray(user.permissions) ? user.permissions : []
+        };
         next();
     });
 };
@@ -343,7 +350,15 @@ app.post('/login', async (req, res) => {
         if (user) {
             const roles = JSON.parse(user.roles);
             const permissions = JSON.parse(user.permissions);
-            const token = jwt.sign({ id: user.id, email: user.email, roles }, SECRET_KEY, { expiresIn: '1h' });
+            const token = jwt.sign({ 
+                id: user.id, 
+                email: user.email, 
+                roles,
+                permissions
+            }, SECRET_KEY, { expiresIn: '1h' });
+            
+            logger.logAudit(user.id, 'User logged in', { email: user.email });
+
             res.json({
                 token,
                 user: {
@@ -388,7 +403,15 @@ app.post('/register', async (req, res) => {
         // For SQLite compatibility (knex .insert returns [id] for sqlite too usually, but let's be safe)
         const userId = typeof id === 'object' ? id.id : id;
 
-        const token = jwt.sign({ id: userId, email, roles: ["USER"] }, SECRET_KEY, { expiresIn: '1h' });
+        const token = jwt.sign({ 
+            id: userId, 
+            email, 
+            roles: ["USER"],
+            permissions: ["VIEW_REPORTS"]
+        }, SECRET_KEY, { expiresIn: '1h' });
+
+        logger.logAudit(userId, 'User registered', { email });
+
         res.status(201).json({
             token,
             user: {
@@ -428,7 +451,7 @@ app.get('/me', authenticateToken, async (req, res) => {
 
 // ==================== REPORTS ROUTES ====================
 
-app.get('/reports', authenticateToken, async (req, res) => {
+app.get('/reports', authenticateToken, checkPermission('VIEW_REPORTS'), async (req, res) => {
     try {
         const reports = await knex('reports').select('*');
         res.json(reports.map(r => ({
@@ -441,7 +464,7 @@ app.get('/reports', authenticateToken, async (req, res) => {
     }
 });
 
-app.get('/reports/:id', authenticateToken, async (req, res) => {
+app.get('/reports/:id', authenticateToken, checkPermission('VIEW_REPORTS'), async (req, res) => {
     try {
         const report = await knex('reports').where({ id: req.params.id }).first();
         if (!report) return res.sendStatus(404);
@@ -455,7 +478,7 @@ app.get('/reports/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/reports', authenticateToken, async (req, res) => {
+app.post('/reports', authenticateToken, checkPermission('CREATE_REPORTS'), async (req, res) => {
     try {
         const { name, description, sourceId, config } = req.body;
         const [id] = await knex('reports').insert({
@@ -466,6 +489,8 @@ app.post('/reports', authenticateToken, async (req, res) => {
         }).returning('id');
 
         const reportId = typeof id === 'object' ? id.id : id;
+
+        logger.logAudit(req.user.id, 'Created report', { reportId, name });
 
         const newReport = await knex('reports').where({ id: reportId }).first();
         res.status(201).json({
@@ -478,7 +503,7 @@ app.post('/reports', authenticateToken, async (req, res) => {
     }
 });
 
-app.put('/reports/:id', authenticateToken, async (req, res) => {
+app.put('/reports/:id', authenticateToken, checkPermission('UPDATE_REPORTS'), async (req, res) => {
     try {
         const { name, description, sourceId, config } = req.body;
         const updateData = {};
@@ -489,6 +514,8 @@ app.put('/reports/:id', authenticateToken, async (req, res) => {
         updateData.updatedAt = knex.fn.now();
 
         await knex('reports').where({ id: req.params.id }).update(updateData);
+
+        logger.logAudit(req.user.id, 'Updated report', { reportId: req.params.id, name });
 
         const report = await knex('reports').where({ id: req.params.id }).first();
         if (!report) return res.sendStatus(404);
@@ -503,9 +530,10 @@ app.put('/reports/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.delete('/reports/:id', authenticateToken, async (req, res) => {
+app.delete('/reports/:id', authenticateToken, checkPermission('DELETE_REPORTS'), async (req, res) => {
     try {
         await knex('reports').where({ id: req.params.id }).del();
+        logger.logAudit(req.user.id, 'Deleted report', { reportId: req.params.id });
         res.sendStatus(204);
     } catch (err) {
         logger.error("Delete report error:", err);
@@ -513,7 +541,7 @@ app.delete('/reports/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/reports/import', authenticateToken, async (req, res) => {
+app.post('/reports/import', authenticateToken, checkPermission('CREATE_REPORTS'), async (req, res) => {
     try {
         const { reports } = req.body;
 
@@ -595,7 +623,7 @@ app.post('/reports/import', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/reports/:id/run', authenticateToken, async (req, res) => {
+app.post('/reports/:id/run', authenticateToken, checkPermission('VIEW_REPORTS'), async (req, res) => {
     try {
         const report = await knex('reports').where({ id: req.params.id }).first();
         if (!report) return res.sendStatus(404);
@@ -620,7 +648,7 @@ app.post('/reports/:id/run', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/reports/preview', authenticateToken, async (req, res) => {
+app.post('/reports/preview', authenticateToken, checkPermission('VIEW_REPORTS'), async (req, res) => {
     const { sourceId, config } = req.body;
 
     try {
@@ -640,7 +668,7 @@ app.post('/reports/preview', authenticateToken, async (req, res) => {
 
 // ==================== DATA SOURCES ROUTES ====================
 
-app.get('/data-sources', authenticateToken, async (req, res) => {
+app.get('/data-sources', authenticateToken, checkPermission('VIEW_DATA_SOURCES'), async (req, res) => {
     try {
         const dataSources = await knex('data_sources').select('*');
         res.json(dataSources.map(ds => ({
@@ -654,7 +682,7 @@ app.get('/data-sources', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/data-sources', authenticateToken, upload.single('file'), async (req, res) => {
+app.post('/data-sources', authenticateToken, checkPermission('CREATE_DATA_SOURCES'), upload.single('file'), async (req, res) => {
     try {
         const { name, type, connectionType } = req.body;
         let config = null;
@@ -715,6 +743,8 @@ app.post('/data-sources', authenticateToken, upload.single('file'), async (req, 
 
         const dsId = typeof id === 'object' ? id.id : id;
 
+        logger.logAudit(req.user.id, 'Created data source', { dataSourceId: dsId, name, type });
+
         const newDataSource = await knex('data_sources').where({ id: dsId }).first();
 
         // Trigger Cube.js schema generation
@@ -753,7 +783,7 @@ app.post('/data-sources', authenticateToken, upload.single('file'), async (req, 
     }
 });
 
-app.put('/data-sources/:id', authenticateToken, upload.single('file'), async (req, res) => {
+app.put('/data-sources/:id', authenticateToken, checkPermission('UPDATE_DATA_SOURCES'), upload.single('file'), async (req, res) => {
     try {
         const dataSource = await knex('data_sources').where({ id: req.params.id }).first();
         if (!dataSource) return res.sendStatus(404);
@@ -806,6 +836,8 @@ app.put('/data-sources/:id', authenticateToken, upload.single('file'), async (re
             updatedAt: knex.fn.now()
         });
 
+        logger.logAudit(req.user.id, 'Updated data source', { dataSourceId: req.params.id, name });
+
         const updated = await knex('data_sources').where({ id: req.params.id }).first();
 
         // Trigger Cube.js schema update
@@ -829,7 +861,7 @@ app.put('/data-sources/:id', authenticateToken, upload.single('file'), async (re
     }
 });
 
-app.delete('/data-sources/:id', authenticateToken, async (req, res) => {
+app.delete('/data-sources/:id', authenticateToken, checkPermission('DELETE_DATA_SOURCES'), async (req, res) => {
     try {
         const dataSource = await knex('data_sources').where({ id: req.params.id }).first();
 
@@ -842,6 +874,8 @@ app.delete('/data-sources/:id', authenticateToken, async (req, res) => {
 
         await knex('data_sources').where({ id: req.params.id }).del();
         
+        logger.logAudit(req.user.id, 'Deleted data source', { dataSourceId: req.params.id });
+
         // Remove Cube.js schema
         try {
             cubeSchemaManager.deleteCubeSchema(dataSource.name);
@@ -856,7 +890,7 @@ app.delete('/data-sources/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/data-sources/preview', authenticateToken, upload.single('file'), async (req, res) => {
+app.post('/data-sources/preview', authenticateToken, checkPermission('VIEW_DATA_SOURCES'), upload.single('file'), async (req, res) => {
     try {
         const { type, connectionType } = req.body;
         let columns = [];
@@ -1024,7 +1058,7 @@ app.post('/data-sources/preview', authenticateToken, upload.single('file'), asyn
     }
 });
 
-app.post('/data-sources/columns', authenticateToken, async (req, res) => {
+app.post('/data-sources/columns', authenticateToken, checkPermission('VIEW_DATA_SOURCES'), async (req, res) => {
     try {
         const { sourceId, config } = req.body;
 
@@ -1121,7 +1155,7 @@ app.post('/data-sources/columns', authenticateToken, async (req, res) => {
 
 // ==================== DASHBOARD ROUTES ====================
 
-app.get('/dashboards', authenticateToken, async (req, res) => {
+app.get('/dashboards', authenticateToken, checkPermission('VIEW_REPORTS'), async (req, res) => {
     try {
         const dashboards = await knex('dashboards').select('*');
         res.json(dashboards.map(d => ({
@@ -1134,7 +1168,7 @@ app.get('/dashboards', authenticateToken, async (req, res) => {
     }
 });
 
-app.get('/dashboards/:id', authenticateToken, async (req, res) => {
+app.get('/dashboards/:id', authenticateToken, checkPermission('VIEW_REPORTS'), async (req, res) => {
     try {
         const dashboard = await knex('dashboards').where({ id: req.params.id }).first();
         if (!dashboard) return res.sendStatus(404);
@@ -1148,7 +1182,7 @@ app.get('/dashboards/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/dashboards', authenticateToken, async (req, res) => {
+app.post('/dashboards', authenticateToken, checkPermission('CREATE_REPORTS'), async (req, res) => {
     try {
         const { name, description, layout } = req.body;
         const [id] = await knex('dashboards').insert({
@@ -1158,6 +1192,9 @@ app.post('/dashboards', authenticateToken, async (req, res) => {
         }).returning('id');
 
         const dashboardId = typeof id === 'object' ? id.id : id;
+        
+        logger.logAudit(req.user.id, 'Created dashboard', { dashboardId, name });
+
         const newDashboard = await knex('dashboards').where({ id: dashboardId }).first();
 
         res.status(201).json({
@@ -1170,7 +1207,7 @@ app.post('/dashboards', authenticateToken, async (req, res) => {
     }
 });
 
-app.put('/dashboards/:id', authenticateToken, async (req, res) => {
+app.put('/dashboards/:id', authenticateToken, checkPermission('UPDATE_REPORTS'), async (req, res) => {
     try {
         const { name, description, layout } = req.body;
         const updateData = {};
@@ -1180,6 +1217,8 @@ app.put('/dashboards/:id', authenticateToken, async (req, res) => {
         updateData.updatedAt = knex.fn.now();
 
         await knex('dashboards').where({ id: req.params.id }).update(updateData);
+
+        logger.logAudit(req.user.id, 'Updated dashboard', { dashboardId: req.params.id, name });
 
         const dashboard = await knex('dashboards').where({ id: req.params.id }).first();
         if (!dashboard) return res.sendStatus(404);
@@ -1194,9 +1233,10 @@ app.put('/dashboards/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.delete('/dashboards/:id', authenticateToken, async (req, res) => {
+app.delete('/dashboards/:id', authenticateToken, checkPermission('DELETE_REPORTS'), async (req, res) => {
     try {
         await knex('dashboards').where({ id: req.params.id }).del();
+        logger.logAudit(req.user.id, 'Deleted dashboard', { dashboardId: req.params.id });
         res.sendStatus(204);
     } catch (err) {
         logger.error("Delete dashboard error:", err);
@@ -1207,7 +1247,7 @@ app.delete('/dashboards/:id', authenticateToken, async (req, res) => {
 
 // ==================== SETTINGS ROUTES ====================
 
-app.get('/settings', authenticateToken, async (req, res) => {
+app.get('/settings', authenticateToken, checkPermission('VIEW_SETTINGS'), async (req, res) => {
     try {
         const settings = await knex('settings').select('*');
         const settingsObj = {};
@@ -1225,7 +1265,7 @@ app.get('/settings', authenticateToken, async (req, res) => {
     }
 });
 
-app.put('/settings', authenticateToken, async (req, res) => {
+app.put('/settings', authenticateToken, checkPermission('UPDATE_SETTINGS'), async (req, res) => {
     try {
         const updates = req.body;
         for (const [key, value] of Object.entries(updates)) {
@@ -1239,6 +1279,8 @@ app.put('/settings', authenticateToken, async (req, res) => {
                 await knex('settings').insert({ key, value: valStr });
             }
         }
+
+        logger.logAudit(req.user.id, 'Updated system settings', { updatedKeys: Object.keys(updates) });
 
         // Return updated settings
         const settings = await knex('settings').select('*');
@@ -1260,10 +1302,7 @@ app.put('/settings', authenticateToken, async (req, res) => {
 
 // ==================== USERS & ROLES (ADMIN) ====================
 
-app.get('/users', authenticateToken, async (req, res) => {
-    // Basic Admin Check (Simplistic)
-    if (!req.user.roles.includes('ADMIN')) return res.sendStatus(403);
-
+app.get('/users', authenticateToken, checkRole('ADMIN'), async (req, res) => {
     try {
         const users = await knex('users').select('id', 'email', 'firstName', 'lastName', 'roles', 'createdAt');
         res.json(users.map(u => ({
@@ -1276,7 +1315,23 @@ app.get('/users', authenticateToken, async (req, res) => {
     }
 });
 
-// ... (Other admin routes follow similar pattern) ...
+app.put('/users/:id/roles', authenticateToken, checkRole('ADMIN'), async (req, res) => {
+    try {
+        const { roles, permissions } = req.body;
+        const updateData = {};
+        if (roles) updateData.roles = JSON.stringify(roles);
+        if (permissions) updateData.permissions = JSON.stringify(permissions);
+
+        await knex('users').where({ id: req.params.id }).update(updateData);
+
+        logger.logAudit(req.user.id, 'Updated user roles/permissions', { targetUserId: req.params.id, roles, permissions });
+
+        res.sendStatus(200);
+    } catch (err) {
+        logger.error("Update user roles error:", err);
+        res.sendStatus(500);
+    }
+});
 
 // ==================== LLM MANAGEMENT ROUTES ====================
 const OLLAMA_HOST = process.env.OLLAMA_HOST || 'ollama';
@@ -1290,7 +1345,7 @@ logger.logActivity('LLM Management initialized', {
 });
 
 // GET /llm/models - List all models
-app.get('/llm/models', authenticateToken, async (req, res) => {
+app.get('/llm/models', authenticateToken, checkPermission('MANAGE_LLM'), async (req, res) => {
     const startTime = Date.now();
     logger.logActivity('Fetching LLM models');
 
@@ -1425,7 +1480,7 @@ app.get('/llm/models', authenticateToken, async (req, res) => {
 
 
 // POST /llm/models/pull - Pull/download a model
-app.post('/llm/models/pull', authenticateToken, async (req, res) => {
+app.post('/llm/models/pull', authenticateToken, checkPermission('MANAGE_LLM'), async (req, res) => {
     const { name, size } = req.body;
     const startTime = Date.now();
 
@@ -1587,7 +1642,7 @@ async function pullModelAsync(modelName) {
 
 
 // DELETE /llm/models/:name - Delete a model
-app.delete('/llm/models/:name', authenticateToken, async (req, res) => {
+app.delete('/llm/models/:name', authenticateToken, checkPermission('MANAGE_LLM'), async (req, res) => {
     const modelName = decodeURIComponent(req.params.name);
     const startTime = Date.now();
 
@@ -1630,7 +1685,7 @@ app.delete('/llm/models/:name', authenticateToken, async (req, res) => {
 // ==================== CHAT ROUTES ====================
 
 // GET /chat/conversations - List all conversations
-app.get('/chat/conversations', authenticateToken, async (req, res) => {
+app.get('/chat/conversations', authenticateToken, checkPermission('VIEW_REPORTS'), async (req, res) => {
     try {
         const conversations = await knex('chat_conversations')
             .orderBy('createdAt', 'desc');
@@ -2062,7 +2117,7 @@ app.post('/chat/conversations/:id/messages', authenticateToken, async (req, res)
 
 // ==================== SCHEDULES ROUTES ====================
 
-app.get('/schedules', authenticateToken, async (req, res) => {
+app.get('/schedules', authenticateToken, checkPermission('VIEW_SETTINGS'), async (req, res) => {
     try {
         const schedules = await knex('schedules').select('*');
         res.json(schedules);
@@ -2072,7 +2127,7 @@ app.get('/schedules', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/schedules', authenticateToken, async (req, res) => {
+app.post('/schedules', authenticateToken, checkPermission('UPDATE_SETTINGS'), async (req, res) => {
     try {
         const { name, cronExpression, taskType, targetId, isActive } = req.body;
         const [id] = await knex('schedules').insert({
@@ -2084,6 +2139,9 @@ app.post('/schedules', authenticateToken, async (req, res) => {
         }).returning('id');
 
         const scheduleId = typeof id === 'object' ? id.id : id;
+
+        logger.logAudit(req.user.id, 'Created schedule', { scheduleId, name, taskType });
+
         const newSchedule = await knex('schedules').where({ id: scheduleId }).first();
 
         // Notify scheduler of the change
@@ -2096,7 +2154,7 @@ app.post('/schedules', authenticateToken, async (req, res) => {
     }
 });
 
-app.put('/schedules/:id', authenticateToken, async (req, res) => {
+app.put('/schedules/:id', authenticateToken, checkPermission('UPDATE_SETTINGS'), async (req, res) => {
     try {
         const { name, cronExpression, taskType, targetId, isActive } = req.body;
         const updateData = {};
@@ -2107,6 +2165,8 @@ app.put('/schedules/:id', authenticateToken, async (req, res) => {
         if (isActive !== undefined) updateData.isActive = isActive;
 
         await knex('schedules').where({ id: req.params.id }).update(updateData);
+
+        logger.logAudit(req.user.id, 'Updated schedule', { scheduleId: req.params.id, name });
 
         const updated = await knex('schedules').where({ id: req.params.id }).first();
         if (!updated) return res.sendStatus(404);
@@ -2121,10 +2181,11 @@ app.put('/schedules/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.delete('/schedules/:id', authenticateToken, async (req, res) => {
+app.delete('/schedules/:id', authenticateToken, checkPermission('UPDATE_SETTINGS'), async (req, res) => {
     try {
         const deleted = await knex('schedules').where({ id: req.params.id }).del();
         if (deleted) {
+            logger.logAudit(req.user.id, 'Deleted schedule', { scheduleId: req.params.id });
             // Notify scheduler of the change
             await schedulerManager.notifyChange();
         }

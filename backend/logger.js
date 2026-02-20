@@ -112,6 +112,15 @@ logger.logActivity = function (activity, details = {}) {
     this.info(`[ACTIVITY] ${activity}`, details);
 };
 
+logger.logAudit = function (userId, action, details = {}) {
+    this.info(`[AUDIT] User ${userId}: ${action}`, {
+        userId,
+        action,
+        ...details,
+        timestamp: new Date().toISOString()
+    });
+};
+
 logger.logDebug = function (message, details = {}) {
     this.debug(`[DEBUG] ${message}`, details);
 };
