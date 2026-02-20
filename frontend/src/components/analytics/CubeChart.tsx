@@ -128,8 +128,8 @@ export function CubeChart({ title, query, chartType, xAxisKey, yAxisKey }: CubeC
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                 ) : error ? (
-                    <div className="text-sm text-destructive py-8 text-center">
-                        Error loading chart data
+                    <div className="text-sm text-muted-foreground py-8 text-center flex flex-col items-center justify-center h-[300px]">
+                        No data available
                     </div>
                 ) : (
                     renderChart()

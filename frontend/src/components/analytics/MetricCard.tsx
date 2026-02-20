@@ -34,7 +34,7 @@ export function MetricCard({ title, query, icon, formatter }: MetricCardProps) {
                         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                     </div>
                 ) : error ? (
-                    <div className="text-sm text-destructive" style={{ wordBreak: "break-all" }}>Error: {error?.message || error?.toString() || 'Unknown'}</div>
+                    <div className="text-2xl font-bold text-muted-foreground">-</div>
                 ) : (
                     <div className="text-2xl font-bold">{getValue()}</div>
                 )}
